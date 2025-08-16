@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Providers from "./providers.js";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,11 +25,12 @@ export default function RootLayout({ children }) {
       <body className="flex">
         <Navbar />
         <div className="ml-48 flex flex-col min-h-screen w-full">
-          <main className="flex-grow p-6">{children}</main>
-          <Footer />
+          <Providers>
+            <main className="flex-grow p-6">{children}</main>
+            <Footer />
+          </Providers>
         </div>
       </body>
     </html>
   );
 }
-
