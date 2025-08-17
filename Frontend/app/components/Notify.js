@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function Notify({ role }) {
   return (
     <nav className="w-48 h-screen bg-gray-900 text-white flex flex-col p-4 fixed right-0 top-16">
