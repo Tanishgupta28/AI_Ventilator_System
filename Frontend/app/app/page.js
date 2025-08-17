@@ -1,3 +1,20 @@
-export default function Home() {
-  return <h1 className="text-3xl font-bold">Welcome to Home Page</h1>;
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+
+    if (role) {
+      router.replace(`/${role}`);
+    } else {
+      router.replace("/nurse");
+    }
+  }, [router]);
+
+  return null; 
 }
