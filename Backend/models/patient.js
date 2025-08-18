@@ -37,7 +37,11 @@ const patientSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: 'Member'
   }],
-  notification: [{
+  oldNotification: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Notification'
+  }],
+  newNotification: [{
     type: Schema.Types.ObjectId,
     ref: 'Notification'
   }],

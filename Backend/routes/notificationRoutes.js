@@ -3,6 +3,7 @@ import Notification from "../models/notification.js";
 import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Doctor from "../models/doctor.js";
+import Nurse from "../models/nurse.js";
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.post(
       success: false,
     });
 
-    existingPatient.notification.push(newNotification._id);
+    existingPatient.newNotification.push(newNotification._id);
     await existingPatient.save();
 
     return res.success(201, "Notification registered successfully", {
@@ -48,28 +49,22 @@ router.get(
       return res.error(404, "Doctor not found", "DOCTOR_NOT_FOUND");
     }
 
-    const patients = await Patient.find({ doctor: doctorId });
+    const patients = await Patient.find({ doctor: doctorId }).populate("newNotification");
 
     if (!patients || patients.length === 0) {
       return res.success(200, "No patients found for this doctor", { patients: [] });
     }
 
-    const patientsWithNotifications = await Promise.all(
-      patients.map(async (patient) => {
-        const notifications = await Notification.find({ patient: patient._id });
-        return {
-          ...patient.toObject(),
-          notifications,
-        };
-      })
-    );
+    const patientsWithNewNotifications = patients.map((patient) => ({
+      ...patient.toObject(),
+      newNotification: patient.newNotification,
+    }));
 
-    return res.success(200, "Patients with notifications fetched successfully", {
-      patients: patientsWithNotifications,
+    return res.success(200, "Patients with new notifications fetched successfully", {
+      patients: patientsWithNewNotifications,
     });
   })
 );
-
 
 router.get(
   "/nurse/:id",
@@ -81,27 +76,21 @@ router.get(
       return res.error(404, "Nurse not found", "NURSE_NOT_FOUND");
     }
 
-    const patients = await Patient.find({ nurse: nurseId });
+    const patients = await Patient.find({ nurse: nurseId }).populate("newNotification");
 
     if (!patients || patients.length === 0) {
       return res.success(200, "No patients found for this nurse", { patients: [] });
     }
 
-    const patientsWithNotifications = await Promise.all(
-      patients.map(async (patient) => {
-        const notifications = await Notification.find({ patient: patient._id });
-        return {
-          ...patient.toObject(),
-          notifications,
-        };
-      })
-    );
+    const patientsWithNewNotifications = patients.map((patient) => ({
+      ...patient.toObject(),
+      newNotification: patient.newNotification,
+    }));
 
-    return res.success(200, "Patients with notifications fetched successfully", {
-      patients: patientsWithNotifications,
+    return res.success(200, "Patients with new notifications fetched successfully", {
+      patients: patientsWithNewNotifications,
     });
   })
 );
-
 
 export default router;
