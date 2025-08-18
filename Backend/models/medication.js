@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const medicationSchema = new mongoose.Schema({
+const medicationSchema = new Schema({
   patient: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Patient',
     required: true
   },
@@ -12,11 +12,11 @@ const medicationSchema = new mongoose.Schema({
   startDate: { type: Date, default: Date.now },
   endDate: { type: Date },
   prescribedBy: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Doctor'
   }
 });
 
-const Medication = mongoose.model('Medication', medicationSchema);
+const Medication = model('Medication', medicationSchema);
 
-module.exports = Medication;
+export default Medication;

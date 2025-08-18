@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import Admin from "../models/admin.js";
+import Doctor from "../models/doctor.js";
+import Patient from "../models/patient.js";
 import { generateToken } from "../utils/jwtFunct.js";
 import { safeHandler } from "../middlewares/safeHandler.js";
 
@@ -15,14 +16,14 @@ router.post(
       return res.error(400, "All fields are required", "VALIDATION_ERROR");
     }
 
-    const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) {
+    const existingDoctor = await Doctor.findOne({ email });
+    if (existingDoctor) {
       return res.error(409, "Email already exists", "EMAIL_EXISTS");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newAdmin = await Admin.create({
+    const newDoctor = await Doctor.create({
       fullname,
       email,
       password: hashedPassword,
@@ -30,10 +31,10 @@ router.post(
       gender,
     });
 
-    const token = generateToken({ id: newAdmin._id, role: "admin" });
+    const token = generateToken({ id: newDoctor._id, role: "doctor" });
 
-    return res.success(201, "Admin registered successfully", {
-      admin: newAdmin,
+    return res.success(201, "Doctor registered successfully", {
+      doctor: newDoctor,
       token,
     });
   })
@@ -44,23 +45,23 @@ router.post(
   safeHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
+    const doctor = await Doctor.findOne({ email });
+    if (!doctor) {
       return res.error(404, "Invalid email or password", "INVALID_CREDENTIALS");
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await bcrypt.compare(password, doctor.password);
     if (!isMatch) {
       return res.error(401, "Invalid email or password", "INVALID_CREDENTIALS");
     }
 
-    const token = generateToken({ id: admin._id, role: "admin" });
+    const token = generateToken({ id: doctor._id, role: "doctor" });
 
-    return res.success(200, "Admin login successful", {
+    return res.success(200, "Doctor login successful", {
       token,
-      admin: {
-        id: admin._id,
-        email: admin.email,
+      doctor: {
+        id: doctor._id,
+        email: doctor.email,
       },
     });
   })

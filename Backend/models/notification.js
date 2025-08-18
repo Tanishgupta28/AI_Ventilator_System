@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const Patient = require('./patient');
+import { Schema, model } from 'mongoose';
+import Patient from './patient';
 
-const notificationSchema = new mongoose.Schema({
+const notificationSchema = new Schema({
   message: {
     type: String,
     required: [true, "Message is required"]
@@ -15,16 +15,16 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now
   },
   Patient: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Patient',
     required: [true, "Patient is required"]
   },
   alert: {
-    type: Boolean,
-    default: false
+    type: String,
+    default: "green"
   }
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
+const Notification = model('Notification', notificationSchema);
 
-module.exports = Notification;
+export default Notification;

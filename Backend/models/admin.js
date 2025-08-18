@@ -1,6 +1,6 @@
-const mongoose = reuqire("mongoose");
+import { Schema, model } from "mongoose";
 
-const adminSchema = new mongoose.Schema({
+const adminSchema = new Schema({
   email: {
     type: String,
     required: [true, "Email is required"]
@@ -10,6 +10,6 @@ const adminSchema = new mongoose.Schema({
     required: [true, "Password is required"]
   }});
 
-const Admin = mongoose.model("Admin", adminSchema);
+const Admin = model("Admin", adminSchema);
 
-module.exports = Admin;
+export default Admin;

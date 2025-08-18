@@ -1,10 +1,13 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import Admin from "../models/admin.js";
+import Nurse from "../models/nurse.js";
+import Patient from "../models/patient.js";
 import { generateToken } from "../utils/jwtFunct.js";
 import { safeHandler } from "../middlewares/safeHandler.js";
 
 const router = express.Router();
+
+
 
 router.post(
   "/register",
@@ -15,14 +18,14 @@ router.post(
       return res.error(400, "All fields are required", "VALIDATION_ERROR");
     }
 
-    const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) {
+    const existingNurse = await Nurse.findOne({ email });
+    if (existingNurse) {
       return res.error(409, "Email already exists", "EMAIL_EXISTS");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newAdmin = await Admin.create({
+    const newNurse = await Nurse.create({
       fullname,
       email,
       password: hashedPassword,
@@ -30,10 +33,10 @@ router.post(
       gender,
     });
 
-    const token = generateToken({ id: newAdmin._id, role: "admin" });
+    const token = generateToken({ id: newNurse._id, role: "nurse" });
 
-    return res.success(201, "Admin registered successfully", {
-      admin: newAdmin,
+    return res.success(201, "Nurse registered successfully", {
+      nurse: newNurse,
       token,
     });
   })
@@ -44,23 +47,24 @@ router.post(
   safeHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
+    const nurse = await Nurse.findOne({ email });
+    if (!nurse) {
       return res.error(404, "Invalid email or password", "INVALID_CREDENTIALS");
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await bcrypt.compare(password, nurse.password);
     if (!isMatch) {
       return res.error(401, "Invalid email or password", "INVALID_CREDENTIALS");
     }
 
-    const token = generateToken({ id: admin._id, role: "admin" });
+    const token = generateToken({ id: nurse._id, role: "nurse" });
 
-    return res.success(200, "Admin login successful", {
+    return res.success(200, "Nurse login successful", {
       token,
-      admin: {
-        id: admin._id,
-        email: admin.email,
+      nurse: {
+        id: nurse._id,
+        email: nurse.email,
+        role: nurse.role,
       },
     });
   })

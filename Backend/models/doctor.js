@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const doctorSchema = new mongoose.Schema({
+const doctorSchema = new Schema({
   fullname: {
     type: String,
     required: [true, "Full name is required"]
@@ -21,12 +21,12 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: [true, "Gender is required"]
   },
-  patient: [{
-    type: mongoose.Schema.Types.ObjectId,
+  patients: [{
+    type: Schema.Types.ObjectId,
     ref: 'Patient'
   }]
 });
 
-const Doctor = mongoose.model('Doctor', doctorSchema);
+const Doctor = model('Doctor', doctorSchema);
 
-module.exports = Doctor;
+export default Doctor;

@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const patientSchema = new mongoose.Schema({
+const patientSchema = new Schema({
   fullname: {
     type: String,
     required: [true, "Full name is required"]
@@ -8,10 +8,6 @@ const patientSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Email is required"]
-  },
-  password: {
-    type: String,
-    required: [true, "Password is required"]
   },
   contactno_Primary: {
     type: String,
@@ -38,23 +34,23 @@ const patientSchema = new mongoose.Schema({
     required: [true, "Address is required"]
   },
   member: [{
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Member'
   }],
   notification: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Notification'
   }],
   doctor:{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Doctor'
   },
   nurse: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Nurse'
   }]
 });
 
-const Patient = mongoose.model('Patient', patientSchema);
+const Patient = model('Patient', patientSchema);
 
-module.exports = Patient;
+export default Patient;
