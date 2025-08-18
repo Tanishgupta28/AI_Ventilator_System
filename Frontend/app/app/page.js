@@ -12,7 +12,7 @@ export default function HomePage() {
     if (role) {
       router.replace(`/${role}`);
     } else {
-      router.replace("/nurse");
+      router.replace("/signin");
     }
   }, [router]);
 
