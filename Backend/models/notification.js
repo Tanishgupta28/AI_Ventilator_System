@@ -1,5 +1,4 @@
 import { Schema, model } from 'mongoose';
-import Patient from './patient';
 
 const notificationSchema = new Schema({
   message: {
@@ -10,17 +9,18 @@ const notificationSchema = new Schema({
     type: Boolean,
     default: false
   },
-  UploadAt: {
+  uploadedAt: {
     type: Date,
     default: Date.now
   },
-  Patient: {
+  patient: {
     type: Schema.Types.ObjectId,
     ref: 'Patient',
     required: [true, "Patient is required"]
   },
   alert: {
     type: String,
+    enum: ["green", "red", "orange", "yellow"],
     default: "green"
   }
 });

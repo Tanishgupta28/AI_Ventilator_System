@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import Doctor from "../models/doctor.js";
 import Patient from "../models/patient.js";
 import { generateToken } from "../utils/jwtFunct.js";
-import { safeHandler } from "../middlewares/safeHandler.js";
+import safeHandler from "../middlewares/safeHandler.js";
 
 const router = express.Router();
 

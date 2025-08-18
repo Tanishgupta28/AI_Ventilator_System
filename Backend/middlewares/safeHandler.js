@@ -1,4 +1,4 @@
-export const safeHandler = (fn) => {
+const safeHandler = (fn) => {
   return (req, res, next) => {
     try {
       const result = fn(req, res, next);
@@ -10,3 +10,5 @@ export const safeHandler = (fn) => {
     }
   };
 };
+
+export default safeHandler;

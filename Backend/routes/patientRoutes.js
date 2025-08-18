@@ -1,5 +1,5 @@
 import express from "express";
-import { safeHandler } from "../middlewares/safeHandler.js";
+import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
@@ -7,6 +7,7 @@ import Nurse from "../models/nurse.js";
 const router = express.Router();
 
 router.post("/register", safeHandler(async (req, res) => {
+  console.log(req.body)
   const {
     fullname,
     email,

@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import Member from "../models/member.js";
 import { generateToken } from "../utils/jwtFunct.js";
-import { safeHandler } from "../middlewares/safeHandler.js";
+import safeHandler from "../middlewares/safeHandler.js";
 
 const router = express.Router();
 
