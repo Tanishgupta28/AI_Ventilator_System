@@ -8,7 +8,7 @@ export default function Navbar({ role }) {
       <h2 className="text-xl font-bold mb-6">Hospital</h2>
 
       <Link href="/dashboard">
-        <IconBox label="Dashboard" image="/dashboard.png" bgColor="bg-blue-100" />
+        <IconBox label="Dashboard" image="/dashboard.png" bgColor="" />
       </Link>
 
       {role === "admin" && (

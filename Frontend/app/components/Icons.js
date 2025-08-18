@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function IconBox({
   label = "Icon",
   image = "",
-  bgColor = "bg-blue-100",
+  bgColor = "",
 }) {
   return (
     <div
