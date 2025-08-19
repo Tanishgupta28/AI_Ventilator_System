@@ -4,7 +4,7 @@ import IconBox from "./Icons";
 
 export default function Navbar({ role }) {
   return (
-    <nav className="w-[130 px] h-screen bg-white text-gray-800 flex flex-col p-0 fixed left-0 top-16 space-y-6 shadow-lg">
+    <nav className="w-30 h-screen bg-white text-gray-800 flex flex-col p-0 fixed left-0 top-16 space-y-6 pt-6">
 
       <div className="flex flex-col space-y-6 flex-grow">
 
@@ -17,7 +17,7 @@ export default function Navbar({ role }) {
         </Link>
 
         <Link href="/caremanager">
-          <IconBox label="Information" image="/caremanager.png" bgColor="bg-blue-100" />
+          <IconBox label="Information" image="/caremanager.png" bgColor="" />
         </Link>
 
         {role === "admin" && (
