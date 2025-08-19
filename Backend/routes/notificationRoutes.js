@@ -102,7 +102,7 @@ router.get(
   })
 );
 
-router.get(
+router.post(
   "/:id",
   safeHandler(async (req, res) => {
     const { id } = req.params;
