@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 export default function PatientDetails() {
   const { patientId, notificationId } = useParams();
   const [data, setData] = useState({});
+  const [length, setLength] = useState(0);
 
   useEffect(() => {
     async function fetchPatientDetails() {
@@ -19,7 +20,12 @@ export default function PatientDetails() {
         const response = await axios.get(
           `${url}/patient/${patientId}/notification/${notificationId}`
         );
+
+        const notifications = response.data.data.notifications || [];
         console.log("Patient Details:", response.data.data);
+        console.log("Notification length:", notifications.length);
+
+        setLength(notifications.length * 20);
         setData(response.data.data);
       } catch (err) {
         console.error("Error fetching patient details:", err);
@@ -33,9 +39,22 @@ export default function PatientDetails() {
 
   return (
     <div className="p-6 ml-48 flex flex-col gap-7">
-      <Profile name={data?.name} age={data?.dob} bed={data?.bed} icon={alertConfig[data?.alert]}/>
+      <Profile
+        name={data?.name}
+        age={data?.dob}
+        bed={data?.bed}
+        icon={alertConfig[data?.alert]}
+      />
       <RealTime />
-      <NotifyBox day={calculateAge(data?.dob)} alert={data?.alert} notifications={data?.notifications} />
+      <div
+        className="max-h-[80vh] overflow-y-auto"
+        style={{ paddingBottom: `${length}px` }}
+      >
+        <NotifyBox
+          day={calculateAge(data?.dob)}
+          notifications={data?.notifications}
+        />
+      </div>
     </div>
   );
 }

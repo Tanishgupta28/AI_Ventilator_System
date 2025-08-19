@@ -13,7 +13,11 @@ router.post(
     const { message, uploadedAt, alert, patient } = req.body;
 
     if (!message || !patient) {
-      return res.error(400, "Message and Patient ID are required", "VALIDATION_ERROR");
+      return res.error(
+        400,
+        "Message and Patient ID are required",
+        "VALIDATION_ERROR"
+      );
     }
 
     const existingPatient = await Patient.findById(patient);
@@ -26,10 +30,15 @@ router.post(
       uploadedAt: uploadedAt || Date.now(),
       alert: alert || "green",
       patient,
-      success: false,
+      success: true,
     });
 
-    existingPatient.newNotification.push(newNotification._id);
+    if (alert === "green") {
+      existingPatient.oldNotification.push(newNotification._id);
+    } else {
+      existingPatient.newNotification.push(newNotification._id);
+    }
+
     await existingPatient.save();
 
     return res.success(201, "Notification registered successfully", {
@@ -93,7 +102,7 @@ router.get(
   })
 );
 
-router.get(
+router.post(
   "/:id",
   safeHandler(async (req, res) => {
     const { id } = req.params;

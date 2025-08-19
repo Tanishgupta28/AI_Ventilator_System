@@ -13,15 +13,19 @@ export default function Button({
       onClick={onClick}
       disabled={disabled}
       className={`
-        ${bgColor} 
-        text-white 
-        ${rounded} 
-        ${height} 
-        ${width} 
-        py-2 px-4 
-        ${bold ? "font-bold" : "font-normal"}
-        ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"}
-      `}
+    ${bgColor} 
+    text-white 
+    ${rounded} 
+    ${height} 
+    ${width} 
+    py-2 px-4 
+    ${bold ? "font-bold" : "font-normal"}
+    ${
+      disabled
+        ? "opacity-50 cursor-not-allowed"
+        : "hover:opacity-90 cursor-pointer"
+    }
+  `}
     >
       {children}
     </button>
