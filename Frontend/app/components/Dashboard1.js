@@ -6,6 +6,8 @@ import Text from "./Text";
 import axios from "axios";
 import Link from "next/link";
 import { url } from "@/url";
+import { calculateAge } from "@/lib/dob";
+import { alertConfig } from "@/lib/alert";
 
 export default function Dashboard1({ role, doctorId }) {
   const [patients, setPatients] = useState([]);
@@ -14,8 +16,12 @@ export default function Dashboard1({ role, doctorId }) {
     async function fetchData() {
       try {
         const res = await axios.get(`${url}/notification/${role}/${doctorId}`);
-        console.log(res.data);
-        setPatients(res.data);
+        const patientsWithAge = (res.data.data.patients || []).map((p) => ({
+          ...p,
+          age: calculateAge(p.dob),
+        }));
+        console.log("Patients with Age:", patientsWithAge);
+        setPatients(patientsWithAge);
       } catch (err) {
         console.error("Error fetching patients:", err);
       }
@@ -34,18 +40,26 @@ export default function Dashboard1({ role, doctorId }) {
       </Text>
 
       <div className="grid grid-cols-3 gap-6">
-        {patients.map((p) => (
-          <Link key={p._id} href={`/patient/${p._id}`}>
-            <Box
-              name={p.name || "Unknown"}
-              age={p.age || "Unknown"}
-              bed={p.bed || "Unknown"}
-              image={p.image || "/hospitalIcon.png"}
-              alert={p.alert || "/questionMark.png"}
-              bgColor={p.bgColor || "bg-red-500"}
-            />
-          </Link>
-        ))}
+        {patients.map((p) => {
+          const alertType = p.newNotification?.[0]?.alert || "default";
+          const { bgColor, alertImage } = alertConfig[alertType] || alertConfig.default;
+
+          return (
+            <Link
+              key={p._id}
+              href={`/doctor/patient/${p._id}/${p.newNotification?.[0]?._id}`}
+            >
+              <Box
+                name={p.fullname || "Unknown"}
+                age={p.age || "Unknown"}
+                bed={p.assigned_bed || "Unknown"}
+                image={p.image || "/hospitalIcon.png"}
+                bgColor={bgColor}
+                alert={alertImage}
+              />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

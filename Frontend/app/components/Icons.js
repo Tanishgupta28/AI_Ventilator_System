@@ -8,12 +8,12 @@ export default function IconBox({
 }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center w-24 h-24 rounded-xl shadow-md cursor-pointer hover:scale-105 transition-transform ${bgColor}`}
+      className={`flex flex-col items-center justify-center w-20 h-20 rounded-xl shadow-md cursor-pointer hover:scale-105 transition-transform ${bgColor}`}
     >
 
       <Image src={image} alt="" width={40} height={40} />
 
-      <p className="mt-2 text-sm font-medium text-gray-700">{label}</p>
+      <p className="mt- text-sm font-medium text-gray-700">{label}</p>
     </div>
   );
 }
