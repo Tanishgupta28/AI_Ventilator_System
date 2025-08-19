@@ -3,6 +3,7 @@ import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
+import Notification from "../models/notification.js";
 
 const router = express.Router();
 
@@ -59,5 +60,69 @@ router.post("/register", safeHandler(async (req, res) => {
 
   return res.success(201, "Patient registered successfully", { patient });
 }));
+
+router.get(
+  "/:patientId/notification/:notificationId",
+  safeHandler(async (req, res) => {
+    const { patientId, notificationId } = req.params;
+
+    const patient = await Patient.findById(patientId)
+      .populate("oldNotification")
+      .populate("newNotification");
+
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    const notification = await Notification.findById(notificationId);
+    if (!notification) {
+      return res.error(404, "Notification not found", "NOTIFICATION_NOT_FOUND");
+    }
+
+      const allNotifications = [
+      ...(patient.oldNotification || []),
+      ...(patient.newNotification || []),
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return res.success(200, "Patient notification fetched successfully", {
+      name: patient.fullname,
+      dob: patient.dob,
+      bed: patient.assigned_bed,
+      alert: notification.alert,
+      notifications: allNotifications,
+    });
+  })
+);
+
+router.delete(
+  "/:patientId",
+  safeHandler(async (req, res) => {
+    const { patientId } = req.params;
+
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    if (patient.doctor) {
+      await Doctor.findByIdAndUpdate(patient.doctor, {
+        $pull: { patients: patient._id },
+      });
+    }
+
+    if (patient.nurse && patient.nurse.length > 0) {
+      await Nurse.updateMany(
+        { _id: { $in: patient.nurse } },
+        { $pull: { patients: patient._id } }
+      );
+    }
+
+    await Notification.deleteMany({ patient: patient._id });
+
+    await Patient.findByIdAndDelete(patientId);
+
+    return res.success(200, "Patient and related details deleted successfully");
+  })
+);
 
 export default router;

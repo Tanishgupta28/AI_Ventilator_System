@@ -1,8 +1,27 @@
-export default function Button({ children, onClick }) {
+export default function Button({
+  children,
+  onClick,
+  height = "h-10",
+  width = "w-32",
+  bgColor = "bg-blue-500",
+  bold = true,
+  rounded = "rounded",
+  disabled = false,
+}) {
   return (
     <button
       onClick={onClick}
-      className={`bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600`}
+      disabled={disabled}
+      className={`
+        ${bgColor} 
+        text-white 
+        ${rounded} 
+        ${height} 
+        ${width} 
+        py-2 px-4 
+        ${bold ? "font-bold" : "font-normal"}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"}
+      `}
     >
       {children}
     </button>

@@ -1,6 +1,8 @@
 "use client";
 import Image from "next/image";
 import UserAvatar from "@/components/UserAvatar";
+import { calculateAge } from "@/lib/dob";
+import Text from "@/components/Text";
 
 export default function Profile({
   image = "/kissan.png",
@@ -10,20 +12,22 @@ export default function Profile({
   bed = "N/A",
 }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm w-200">
+    <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm w-220">
       <div className="flex items-center space-x-3">
-        <UserAvatar image={image || "/kissan.png"} width={50} height={50} />
+        <UserAvatar image={image || "/kissan.png"} width={60} height={50} />
         <div>
-          <p className="text-sm font-semibold text-gray-900">{name || "N/A"}</p>
-          <p className="text-xs text-gray-600">
-            Age: {age || "N/A"} &nbsp; Bed: {bed || "N/A"}
-          </p>
+          <Text size="text-2xl" bold>
+            {name || "N/A"}
+          </Text>
+          <Text size="text-m" bold>
+            Age: {calculateAge(age) || "N/A"} &nbsp; Bed: {bed || "N/A"}
+          </Text>
         </div>
       </div>
       <Image
-        src={icon || "/questionMark.png"}
+        src={icon?.alertImage || "/questionMark.png"}
         alt="Status Icon"
-        width={30}
+        width={40}
         height={30}
         className="ml-3"
       />
