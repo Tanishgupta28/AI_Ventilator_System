@@ -105,6 +105,32 @@ router.get(
   })
 );
 
+router.get(
+  "/admin/:id",
+  safeHandler(async (req, res) => {
+    const adminId = req.params.id;
+
+     const admin = await Admin.findById(adminId);
+     if (!admin) {
+       return res.error(404, "Admin not found", "ADMIN_NOT_FOUND");
+     }
+    const patients = await Patient.find().populate("newNotification");
+
+    if (!patients || patients.length === 0) {
+      return res.success(200, "No patients found in the system", { patients: [] });
+    }
+    
+    const patientsWithNewNotifications = patients.map((patient) => ({
+      ...patient.toObject(),
+      newNotification: patient.newNotification,
+    }));
+
+    return res.success(200, "All patients with new notifications fetched successfully", {
+      patients: patientsWithNewNotifications,
+    });
+  })
+);
+
 router.post(
   "/:id",
   safeHandler(async (req, res) => {
