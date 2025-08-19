@@ -1,22 +1,21 @@
 import { Schema, model } from 'mongoose';
 
-const medicationSchema = new Schema({
+const messageSchema = new Schema({
   patient: {
     type: Schema.Types.ObjectId,
-    ref: 'Patient',
+    ref: "Patient",
     required: true
   },
-  name: { type: String, required: true },
-  dosage: { type: String, required: true },
-  frequency: { type: String, required: true },
-  startDate: { type: Date, default: Date.now },
-  endDate: { type: Date },
-  prescribedBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'Doctor'
+  date: {
+    type: Date,
+    required: true
+  },
+  msg: {
+    type: String,
+    required: true
   }
 });
 
-const Medication = model('Medication', medicationSchema);
+const Message = model('Message', messageSchema);
 
-export default Medication;
+export default Message;

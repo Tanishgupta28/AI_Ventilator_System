@@ -52,12 +52,9 @@ router.post(
       return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
     }
 
-    const token = generateToken({ id: newMember._id, role: newMember.role });
-
     return res.success(201, "Member registered and linked to patient successfully", {
       member: newMember,
       patient: updatedPatient,
-      token,
     });
   })
 );
