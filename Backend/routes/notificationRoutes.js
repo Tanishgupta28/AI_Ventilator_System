@@ -64,16 +64,19 @@ router.get(
       return res.success(200, "No patients found for this doctor", { patients: [] });
     }
 
-    const patientsWithNewNotifications = patients.map((patient) => ({
-      ...patient.toObject(),
-      newNotification: patient.newNotification,
-    }));
+    const patientsWithNewNotifications = patients
+      .filter((patient) => patient.newNotification && patient.newNotification.length > 0)
+      .map((patient) => ({
+        ...patient.toObject(),
+        newNotification: patient.newNotification,
+      }));
 
     return res.success(200, "Patients with new notifications fetched successfully", {
       patients: patientsWithNewNotifications,
     });
   })
 );
+
 
 router.get(
   "/nurse/:id",

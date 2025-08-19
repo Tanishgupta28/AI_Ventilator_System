@@ -96,6 +96,25 @@ router.get(
   })
 );
 
+router.get(
+  "/:id",
+  safeHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const patient = await Patient.findById(id).select("fullname dob assigned_bed");
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    return res.success(200, "Patient details fetched successfully", {
+      name: patient.fullname,
+      dob: patient.dob,
+      bed: patient.assigned_bed,
+    });
+  })
+);
+
+
 
 router.delete(
   "/:patientId",
