@@ -23,7 +23,8 @@ const notificationSchema = new Schema({
     enum: ["green", "red", "orange", "yellow"],
     default: "green"
   }
-});
+}, { timestamps: true }
+);
 
 const Notification = model('Notification', notificationSchema);
 
