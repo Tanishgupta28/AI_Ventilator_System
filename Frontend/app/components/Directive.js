@@ -9,10 +9,10 @@ export default function Directive({ color, message, patientId, bed, time }) {
       ></span>
 
       <div className="flex flex-col">
-        <Text bold size="text-sm">Patient Alert</Text>
-        <Text size="text-xs" color="text-gray-300">{message}</Text>
-        <Text size="text-xs" color="text-gray-400">Patient: {patientId} | Bed: {bed}</Text>
-        <Text size="text-xs" color="text-gray-500">{time}</Text>
+        <Text bold size="text-sm" color="text-white">Patient Alert</Text>
+        <Text size="text-xs" color="text-white">{message}</Text>
+        <Text size="text-xs" color="text-white">Patient: {patientId} | Bed: {bed}</Text>
+        <Text size="text-xs" color="text-white">{time}</Text>
       </div>
     </div>
   );
