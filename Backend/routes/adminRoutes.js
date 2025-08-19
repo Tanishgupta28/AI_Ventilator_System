@@ -9,10 +9,10 @@ const router = express.Router();
 router.post(
   "/register",
   safeHandler(async (req, res) => {
-    const { fullname, email, password, contactno, gender } = req.body;
+    const { email, password } = req.body;
 
-    if (!fullname || !email || !password || !contactno || !gender) {
-      return res.error(400, "All fields are required", "VALIDATION_ERROR");
+    if (!email || !password) {
+      return res.error(400, "Email and password are required", "VALIDATION_ERROR");
     }
 
     const existingAdmin = await Admin.findOne({ email });
@@ -23,17 +23,17 @@ router.post(
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newAdmin = await Admin.create({
-      fullname,
       email,
       password: hashedPassword,
-      contactno,
-      gender,
     });
 
     const token = generateToken({ id: newAdmin._id, role: "admin" });
 
     return res.success(201, "Admin registered successfully", {
-      admin: newAdmin,
+      admin: {
+        _id: newAdmin._id,
+        email: newAdmin.email,
+      },
       token,
     });
   })
