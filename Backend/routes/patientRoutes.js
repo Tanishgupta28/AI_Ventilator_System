@@ -22,7 +22,6 @@ router.post("/register", safeHandler(async (req, res) => {
     nurseEmails
   } = req.body;
 
-
   const doctor = await Doctor.findOne({ email: doctorEmail });
   if (!doctor) {
     return res.error(404, "Doctor not found", "DOCTOR_NOT_FOUND");
@@ -79,10 +78,13 @@ router.get(
       return res.error(404, "Notification not found", "NOTIFICATION_NOT_FOUND");
     }
 
-      const allNotifications = [
+    const sortedNewNotifications = [...(patient.newNotification || [])].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    const allNotifications = [
       ...(patient.oldNotification || []),
-      ...(patient.newNotification || []),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      ...sortedNewNotifications,
+    ];
 
     return res.success(200, "Patient notification fetched successfully", {
       name: patient.fullname,
@@ -93,6 +95,7 @@ router.get(
     });
   })
 );
+
 
 router.delete(
   "/:patientId",
