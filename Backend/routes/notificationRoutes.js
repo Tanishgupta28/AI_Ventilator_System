@@ -93,4 +93,40 @@ router.get(
   })
 );
 
+router.get(
+  "/:id",
+  safeHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const notification = await Notification.findById(id);
+    if (!notification) {
+      return res.error(404, "Notification not found", "NOTIFICATION_NOT_FOUND");
+    }
+
+    notification.success = true;
+    notification.alert = "green";
+    await notification.save();
+
+    const patient = await Patient.findById(notification.patient);
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    patient.newNotification = patient.newNotification.filter(
+      (nid) => nid.toString() !== notification._id.toString()
+    );
+
+    if (!patient.oldNotification.includes(notification._id)) {
+      patient.oldNotification.push(notification._id);
+    }
+
+    await patient.save();
+
+    return res.success(200, "Notification updated successfully", {
+      notification,
+      patient,
+    });
+  })
+);
+
 export default router;

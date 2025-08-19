@@ -3,6 +3,7 @@ import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
+import Notification from "../models/notification.js";
 
 const router = express.Router();
 
@@ -90,6 +91,37 @@ router.get(
       alert: notification.alert,
       notifications: allNotifications,
     });
+  })
+);
+
+router.delete(
+  "/:patientId",
+  safeHandler(async (req, res) => {
+    const { patientId } = req.params;
+
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    if (patient.doctor) {
+      await Doctor.findByIdAndUpdate(patient.doctor, {
+        $pull: { patients: patient._id },
+      });
+    }
+
+    if (patient.nurse && patient.nurse.length > 0) {
+      await Nurse.updateMany(
+        { _id: { $in: patient.nurse } },
+        { $pull: { patients: patient._id } }
+      );
+    }
+
+    await Notification.deleteMany({ patient: patient._id });
+
+    await Patient.findByIdAndDelete(patientId);
+
+    return res.success(200, "Patient and related details deleted successfully");
   })
 );
 

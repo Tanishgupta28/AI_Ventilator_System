@@ -3,13 +3,15 @@ import bcrypt from "bcrypt";
 import Member from "../models/member.js";
 import { generateToken } from "../utils/jwtFunct.js";
 import safeHandler from "../middlewares/safeHandler.js";
+import Patient from "../models/patient.js";
 
 const router = express.Router();
 
 router.post(
-  "/register",
+  "/register/:id",
   safeHandler(async (req, res) => {
     const { fullname, email, password, contactno, role } = req.body;
+    const patientId = req.params.id;
 
     if (!fullname || !email || !password || !contactno || !role) {
       return res.error(400, "All fields are required", "VALIDATION_ERROR");
@@ -30,10 +32,31 @@ router.post(
       role,
     });
 
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      patientId,
+      {
+        $push: {
+          members: {
+            memberId: newMember._id, 
+            fullname: newMember.fullname,
+            email: newMember.email,
+            contactno: newMember.contactno,
+            role: newMember.role,
+          },
+        },
+      },
+      { new: true } 
+    );
+
+    if (!updatedPatient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
     const token = generateToken({ id: newMember._id, role: newMember.role });
 
-    return res.success(201, "Member registered successfully", {
+    return res.success(201, "Member registered and linked to patient successfully", {
       member: newMember,
+      patient: updatedPatient,
       token,
     });
   })
