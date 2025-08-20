@@ -58,22 +58,37 @@ router.get(
       return res.error(404, "Doctor not found", "DOCTOR_NOT_FOUND");
     }
 
-    const patients = await Patient.find({ doctor: doctorId }).populate("newNotification");
+    const patients = await Patient.find({ doctor: doctorId })
+      .select("fullname dob assigned_bed newNotification oldNotification") // only fetch needed fields
+      .populate("newNotification")
+      .populate("oldNotification");
 
     if (!patients || patients.length === 0) {
       return res.success(200, "No patients found for this doctor", { patients: [] });
     }
 
-    const patientsWithNewNotifications = patients
-      .filter((patient) => patient.newNotification && patient.newNotification.length > 0)
-      .map((patient) => ({
-        ...patient.toObject(),
-        newNotification: patient.newNotification,
-      }));
+    const patientsWithNotifications = patients.map((patient) => {
+      let notificationsToShow = [];
 
-    return res.success(200, "Patients with new notifications fetched successfully", {
-      patients: patientsWithNewNotifications,
+      if (patient.newNotification && patient.newNotification.length > 0) {
+        notificationsToShow = patient.newNotification;
+      } else if (patient.oldNotification && patient.oldNotification.length > 0) {
+        notificationsToShow = [patient.oldNotification[0]];
+      }
+
+      return {
+        fullname: patient.fullname,
+        dob: patient.dob,
+        assigned_bed: patient.assigned_bed,
+        notifications: notificationsToShow,
+      };
     });
+
+    return res.success(
+      200,
+      "Patients with notifications fetched successfully",
+      { patients: patientsWithNotifications }
+    );
   })
 );
 
@@ -88,48 +103,82 @@ router.get(
       return res.error(404, "Nurse not found", "NURSE_NOT_FOUND");
     }
 
-    const patients = await Patient.find({ nurse: nurseId }).populate("newNotification");
+    const patients = await Patient.find({ nurse: nurseId })
+      .populate("newNotification")
+      .populate("oldNotification");
 
     if (!patients || patients.length === 0) {
       return res.success(200, "No patients found for this nurse", { patients: [] });
     }
 
-    const patientsWithNewNotifications = patients.map((patient) => ({
-      ...patient.toObject(),
-      newNotification: patient.newNotification,
-    }));
+    const patientsWithNotifications = patients.map((patient) => {
+      let notificationsToShow = [];
 
-    return res.success(200, "Patients with new notifications fetched successfully", {
-      patients: patientsWithNewNotifications,
+      if (patient.newNotification && patient.newNotification.length > 0) {
+
+        notificationsToShow = patient.newNotification;
+      } else if (patient.oldNotification && patient.oldNotification.length > 0) {
+
+        notificationsToShow = [patient.oldNotification[0]];
+      }
+
+      return {
+        ...patient.toObject(),
+        notifications: notificationsToShow,
+      };
     });
+
+    return res.success(
+      200,
+      "Patients with notifications fetched successfully",
+      { patients: patientsWithNotifications }
+    );
   })
 );
+
 
 router.get(
   "/admin/:id",
   safeHandler(async (req, res) => {
     const adminId = req.params.id;
 
-     const admin = await Admin.findById(adminId);
-     if (!admin) {
-       return res.error(404, "Admin not found", "ADMIN_NOT_FOUND");
-     }
-    const patients = await Patient.find().populate("newNotification");
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.error(404, "Admin not found", "ADMIN_NOT_FOUND");
+    }
+
+    const patients = await Patient.find()
+      .populate("newNotification")
+      .populate("oldNotification");
 
     if (!patients || patients.length === 0) {
       return res.success(200, "No patients found in the system", { patients: [] });
     }
-    
-    const patientsWithNewNotifications = patients.map((patient) => ({
-      ...patient.toObject(),
-      newNotification: patient.newNotification,
-    }));
 
-    return res.success(200, "All patients with new notifications fetched successfully", {
-      patients: patientsWithNewNotifications,
+    const patientsWithNotifications = patients.map((patient) => {
+      let notificationsToShow = [];
+
+      if (patient.newNotification && patient.newNotification.length > 0) {
+  
+        notificationsToShow = patient.newNotification;
+      } else if (patient.oldNotification && patient.oldNotification.length > 0) {
+        notificationsToShow = [patient.oldNotification[0]];
+      }
+
+      return {
+        ...patient.toObject(),
+        notifications: notificationsToShow,
+      };
     });
+
+    return res.success(
+      200,
+      "All patients with notifications fetched successfully",
+      { patients: patientsWithNotifications }
+    );
   })
 );
+
 
 router.post(
   "/:id",
