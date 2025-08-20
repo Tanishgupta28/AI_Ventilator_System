@@ -142,7 +142,7 @@ router.get(
   safeHandler(async (req, res) => {
     const adminId = req.params.id;
 
-    const admin = await Admin.findById(adminId);
+    const admin = await admin.findById(adminId);
     if (!admin) {
       return res.error(404, "Admin not found", "ADMIN_NOT_FOUND");
     }
