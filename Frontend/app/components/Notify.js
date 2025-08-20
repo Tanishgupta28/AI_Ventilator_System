@@ -3,28 +3,32 @@ import Directive from "./Directive";
 import axios from "axios";
 import { url } from "@/url";
 
-export default function Notify({ role, id }) {
+export default function Notify({ role }) {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        console.log(id)
+        const id = localStorage.getItem("id");
         const res = await axios.get(`${url}/notification/${role}/${id}`);
         const patients = res.data.data.patients || [];
         console.log("Fetched patients:", patients);
+
         const formattedNotifications = patients.flatMap((p) =>
-          (p.newNotification || []).map((note) => ({
+          (p.notifications || []).map((note) => ({
             message: note.message,
-            patientId: p.fullname,
+            patientId: p._id,
             patientName: p.fullname,
             bed: p.assigned_bed,
             time: new Date(note.uploadedAt).toLocaleString(),
             color: note.alert || "default",
           }))
         );
+
+        // Sort by uploadedAt (not stringified time!)
         formattedNotifications.sort(
-          (a, b) => new Date(b.time) - new Date(a.time)
+          (a, b) =>
+            new Date(b.time).getTime() - new Date(a.time).getTime()
         );
 
         setNotifications(formattedNotifications);
@@ -34,7 +38,7 @@ export default function Notify({ role, id }) {
     }
 
     fetchData();
-  }, [id, role]);
+  }, [role]);
 
   return (
     <nav
@@ -53,6 +57,7 @@ export default function Notify({ role, id }) {
               color={note.color}
               message={note.message}
               patientId={note.patientId}
+              patientName={note.patientName}
               bed={note.bed}
               time={note.time}
             />
