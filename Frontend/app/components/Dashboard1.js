@@ -16,11 +16,11 @@ export default function Dashboard1({ role, id, info }) {
     async function fetchData() {
       try {
         const res = await axios.get(`${url}/notification/${role}/${id}`);
-        console.log("Fetched patients:", res.data.data.patients);
         const patientsWithAge = (res.data.data.patients || []).map((p) => ({
           ...p,
           age: calculateAge(p.dob),
         }));
+        console.log("Patients with age:", patientsWithAge);
         setPatients(patientsWithAge);
       } catch (err) {
         console.error("Error fetching patients:", err);
@@ -31,7 +31,7 @@ export default function Dashboard1({ role, id, info }) {
   }, [id, role]);
   const allNotifications = useMemo(() => {
     return patients.flatMap((p) =>
-      (p.newNotification || []).map((notif) => ({
+      (p.notifications || []).map((notif) => ({
         notifId: notif._id,
         patientId: p._id,
         fullname: p.fullname || "Unknown",
