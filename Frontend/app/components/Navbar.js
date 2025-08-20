@@ -31,10 +31,13 @@ export default function Navbar({ role }) {
             <IconBox label="Care Manager" image="/caremanager.png" bgColor="bg-yellow-100" />
           </Link>
         )}
-
       </div>
 
-      <div className="mt-auto mb-16 px-4">
+      <div className="mt-auto mb-16 px-4 space-y-6">
+        <Link href="/signout">
+          <IconBox label="Sign Out" image="/help.png" bgColor="" />
+        </Link>
+
         <Link href="/help">
           <IconBox label="Help" image="/help.png" bgColor="" />
         </Link>
