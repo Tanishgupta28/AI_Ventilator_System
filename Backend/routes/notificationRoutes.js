@@ -27,12 +27,13 @@ router.post(
     }
 
     const newNotification = await Notification.create({
-      message,
-      uploadedAt: uploadedAt || Date.now(),
-      alert: alert || "green",
-      patient,
-      success: true,
+    message,
+    uploadedAt: uploadedAt || Date.now(),
+    alert: alert || "green",
+    patient,
+    success: alert === "green" ? true : false,  
     });
+
 
     if (alert === "green") {
       existingPatient.oldNotification.push(newNotification._id);
