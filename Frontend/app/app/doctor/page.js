@@ -1,11 +1,12 @@
 "use client";
 import Dashboard1 from "@/components/Dashboard1";
-import { useSearchParams } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
 export default function DoctorPage() {
-  const searchParams = useSearchParams();
-  const data = searchParams.get("data");
-  const doctorId = JSON.parse(data).doctor.id;
-
-  return <Dashboard1 role="doctor" doctorId={doctorId} />;
+  const [id, setId] = useState(null);
+  useEffect(() => {
+    const id = localStorage.getItem("id");
+    setId(id);
+  }, []);
+  return <Dashboard1 role="doctor" id={id} info={true} />;
 }
