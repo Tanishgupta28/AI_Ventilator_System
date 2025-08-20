@@ -4,6 +4,7 @@ import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
+import Admin from "../models/admin.js";
 
 const router = express.Router();
 
@@ -142,7 +143,7 @@ router.get(
   safeHandler(async (req, res) => {
     const adminId = req.params.id;
 
-    const admin = await admin.findById(adminId);
+    const admin = await Admin.findById(adminId);
     if (!admin) {
       return res.error(404, "Admin not found", "ADMIN_NOT_FOUND");
     }
