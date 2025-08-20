@@ -78,6 +78,7 @@ router.get(
       }
 
       return {
+        id: patient._id,
         fullname: patient.fullname,
         dob: patient.dob,
         assigned_bed: patient.assigned_bed,
