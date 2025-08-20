@@ -35,7 +35,7 @@ export default function InputField({
         placeholder={placeholder}
         onChange={onChange}
         style={inlineStyle}
-        className={`${widthClass} ${heightClass} px-3 py-2 ${rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50`}
+        className={`${widthClass} ${heightClass} px-3 py-2 ${rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400`}
       />
     </div>
   );
