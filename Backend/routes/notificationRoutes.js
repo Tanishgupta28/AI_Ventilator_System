@@ -105,6 +105,7 @@ router.get(
     }
 
     const patients = await Patient.find({ nurse: nurseId })
+      .select("fullname dob assigned_bed newNotification oldNotification")
       .populate("newNotification")
       .populate("oldNotification");
 
@@ -116,15 +117,15 @@ router.get(
       let notificationsToShow = [];
 
       if (patient.newNotification && patient.newNotification.length > 0) {
-
         notificationsToShow = patient.newNotification;
       } else if (patient.oldNotification && patient.oldNotification.length > 0) {
-
         notificationsToShow = [patient.oldNotification[0]];
       }
 
       return {
-        ...patient.toObject(),
+        fullname: patient.fullname,
+        dob: patient.dob,
+        assigned_bed: patient.assigned_bed,
         notifications: notificationsToShow,
       };
     });
@@ -138,6 +139,7 @@ router.get(
 );
 
 
+
 router.get(
   "/admin/:id",
   safeHandler(async (req, res) => {
@@ -149,6 +151,7 @@ router.get(
     }
 
     const patients = await Patient.find()
+      .select("fullname dob assigned_bed newNotification oldNotification") // only fetch needed fields
       .populate("newNotification")
       .populate("oldNotification");
 
@@ -160,14 +163,15 @@ router.get(
       let notificationsToShow = [];
 
       if (patient.newNotification && patient.newNotification.length > 0) {
-  
         notificationsToShow = patient.newNotification;
       } else if (patient.oldNotification && patient.oldNotification.length > 0) {
         notificationsToShow = [patient.oldNotification[0]];
       }
 
       return {
-        ...patient.toObject(),
+        fullname: patient.fullname,
+        dob: patient.dob,
+        assigned_bed: patient.assigned_bed,
         notifications: notificationsToShow,
       };
     });
@@ -178,7 +182,7 @@ router.get(
       { patients: patientsWithNotifications }
     );
   })
-);
+);  
 
 
 router.post(
