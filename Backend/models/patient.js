@@ -60,7 +60,11 @@ const patientSchema = new Schema({
   medication: [{
     type: Schema.Types.ObjectId,
     ref: 'Medication'
-  }]
+  }],
+  image: {
+    type: Schema.Types.ObjectId,
+    ref: 'Image'
+  }
 });
 
 const Patient = model('Patient', patientSchema);
