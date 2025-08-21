@@ -48,13 +48,18 @@ export default function PatientDetails() {
           bed={data?.bed}
           bool={false}
           width={900}
-          iw={50}
+          iw={100}
+          namesize="text-3xl"
+          agesize="text-xl"
         />
         <Medication
           schedules={[
             { label: "Vital Sign Checks", time: "11:30" },
             { label: "Medicine Time", time: "04:00" },
             { label: "Dinner Feeding", time: "08:30" },
+            { label: "Dinner Feeding", time: "08:30" },
+            { label: "Dinner Feeding", time: "08:30" },
+            { label: "Feeding", time: "08:30" },
           ]}
           onSubmit={(newItem) => {
             console.log("Send to backend:", newItem);

@@ -49,7 +49,9 @@ export default function PatientDetails() {
           bed={data?.bed}
           bool={false}
           width={900}
-          iw={50}
+          iw={100}
+          namesize="text-3xl"
+          agesize="text-xl"
         />
         <Member
           members={[
