@@ -13,16 +13,18 @@ export default function Profile({
   bool=true,
   width=900,
   iw=60,
+  namesize="text-2xl",
+  agesize="text-m"
 }) {
   return (
     <div className={`flex items-center justify-between p-3 bg-white rounded-lg w-[${width}px]`}>
       <div className="flex items-center space-x-3">
         <UserAvatar image={image || "/kissan.png"} width={iw} height={iw} />
         <div>
-          <Text size="text-2xl" bold>
+          <Text size={namesize} bold>
             {name || "N/A"}
           </Text>
-          <Text size="text-m" bold>
+          <Text size={agesize} bold>
             Age: {calculateAge(age) || "N/A"} &nbsp; Bed: {bed || "N/A"}
           </Text>
         </div>
