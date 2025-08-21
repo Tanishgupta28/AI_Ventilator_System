@@ -57,8 +57,25 @@ router.post("/register", safeHandler(async (req, res) => {
     await nurse.save();
   }
 
-  return res.success(201, "Patient registered successfully", { patient });
+  const notification = new Notification({
+    message: "Patient added ",
+    alert: "green",      
+    success: true, 
+    patient: patient._id,     
+    createdAt: new Date()
+  });
+
+  await notification.save();
+  await patient.updateOne({
+    $push: { newNotification: notification._id }
+  });
+
+  return res.success(201, "Patient registered successfully", { 
+    patient,
+    notification
+  });
 }));
+
 
 router.get(
   "/:patientId/notification/:notificationId",

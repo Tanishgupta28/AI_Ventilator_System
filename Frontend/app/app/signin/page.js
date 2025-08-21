@@ -17,12 +17,13 @@ export default function LoginPage() {
         email,
         password,
       });
+      localStorage.setItem("id", res.data.data?.[`${role}`]?.id);
       const token = res.data.data.token;
       localStorage.setItem("token", token);
-
       alert("Login successful ✅");
       const data = JSON.stringify(res.data.data);
-      router.push(`/${role}?data=${encodeURIComponent(data)}`);
+      if (role == "admin") router.push(`/admin/addpatient`);
+      else router.push(`/${role}`);
     } catch (error) {
       console.error(error);
       alert("Login failed ❌");

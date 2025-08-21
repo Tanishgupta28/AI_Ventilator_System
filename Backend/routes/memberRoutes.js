@@ -45,7 +45,7 @@ router.post(
           },
         },
       },
-      { new: true } 
+      { new: true, runValidators: true }
     );
 
     if (!updatedPatient) {
