@@ -10,11 +10,14 @@ export default function Profile({
   name = "N/A",
   age = "N/A",
   bed = "N/A",
+  bool=true,
+  width=900,
+  iw=60,
 }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm w-220">
+    <div className={`flex items-center justify-between p-3 bg-white rounded-lg w-[${width}px]`}>
       <div className="flex items-center space-x-3">
-        <UserAvatar image={image || "/kissan.png"} width={60} height={50} />
+        <UserAvatar image={image || "/kissan.png"} width={iw} height={iw} />
         <div>
           <Text size="text-2xl" bold>
             {name || "N/A"}
@@ -24,13 +27,15 @@ export default function Profile({
           </Text>
         </div>
       </div>
-      <Image
-        src={icon?.alertImage || "/questionMark.png"}
-        alt="Status Icon"
-        width={40}
-        height={30}
-        className="ml-3"
-      />
+      {bool && (
+        <Image
+          src={icon?.alertImage || "/questionMark.png"}
+          alt="Status Icon"
+          width={40}
+          height={30}
+          className="ml-3"
+        />
+      )}
     </div>
   );
 }

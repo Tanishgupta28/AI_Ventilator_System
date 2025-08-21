@@ -1,32 +1,86 @@
 "use client";
 import Image from "next/image";
-import UserAvatar from "@/components/UserAvatar";
+import { LineChart, Line, Area, ResponsiveContainer } from "recharts";
 
 export default function RealTime({
-  image = "/kissan.png",
-  icon = "/questionMark.png",
-  name = "N/A",
-  age = "N/A",
-  bed = "N/A",
+  label1 = "Oxygen",
+  label2 = "Saturation",
+  value = "98%",
+  icon = "/OxygenSaturation.png",
+  data = [95, 96, 97, 98, 97, 99, 98],
 }) {
+  let status = "";
+  let statusColor = "";
+
+  const numericValue = parseInt(value);
+
+  if (!isNaN(numericValue)) {
+    if (numericValue >= 95 && numericValue <= 100) {
+      status = "Normal";
+      statusColor = "bg-orange-100 text-black-700";
+    } else if (numericValue < 95) {
+      status = "Low";
+      statusColor = "bg-red-100 text-black-700";
+    } else {
+      status = "High";
+      statusColor = "bg-yellow-100 text-black-700";
+    }
+  }
+
+  const chartData = data.map((d, i) => ({ time: i, value: d }));
+
   return (
-    <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm w-200">
-      <div className="flex items-center space-x-3">
-        <UserAvatar image={image || "/kissan.png"} width={50} height={50} />
-        <div>
-          <p className="text-sm font-semibold text-gray-900">{name || "N/A"}</p>
-          <p className="text-xs text-gray-600">
-            Age: {age || "N/A"} &nbsp; Bed: {bed || "N/A"}
-          </p>
+    <div className="w-64 h-72 bg-white rounded-2xl shadow-lg p-5 flex flex-col justify-between border border-gray-200">
+      <div className="flex items-start gap-6">
+        <div className="flex flex-col items-center">
+          <div className="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-lg">
+            <Image src={icon} alt="OxygenSaturation Icon" width={35} height={35} />
+          </div>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+          {status && (
+            <span
+              className={`mt-1 px-2 py-0.5 rounded-md text-xs font-bold ${statusColor}`}
+            >
+              {status}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col justify-center">
+          <p className="text-lg font-semibold text-gray-700">{label1}</p>
+          <p className="text-lg font-semibold text-gray-700 -mt-1">{label2}</p>
         </div>
       </div>
-      <Image
-        src={icon || "/questionMark.png"}
-        alt="Status Icon"
-        width={30}
-        height={30}
-        className="ml-3"
-      />
+
+      <div className="h-28 mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <defs>
+              <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#eb7425" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#eb7425" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="none"
+              fill="url(#colorOrange)"
+              fillOpacity={0.4}
+              activeDot={false}
+            />
+
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#eb7425"
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

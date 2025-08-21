@@ -22,8 +22,7 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
       alert("Login successful ✅");
       const data = JSON.stringify(res.data.data);
-      if (role == "admin") router.push(`/admin/addpatient`);
-      else router.push(`/${role}`);
+      router.push(`/${role}`);
     } catch (error) {
       console.error(error);
       alert("Login failed ❌");

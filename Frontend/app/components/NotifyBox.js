@@ -34,7 +34,7 @@ export default function NotifyBox({ notifications = [] }) {
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-3 w-[880px]">
       {items.map((n) => {
         const date = format(new Date(n.uploadedAt), "dd MMM");
         const time = format(new Date(n.uploadedAt), "HH:mm");
@@ -44,24 +44,18 @@ export default function NotifyBox({ notifications = [] }) {
             key={n._id}
             className="relative flex items-center justify-between p-3 bg-white rounded-sm shadow-sm w-full"
           >
-            {/* Left alert color strip */}
             <div
               className={`absolute left-0 top-0 h-full w-2 ${
                 alertConfig[n.alert]?.bgColor || "bg-gray-400"
               } rounded-l-sm`}
             ></div>
-
-            {/* Content */}
             <div className="flex justify-between items-center w-full pl-4">
-              {/* Left side */}
               <div className="flex gap-6">
                 <Text size="text-sm" bold>
                   {date}
                 </Text>
                 <Text size="text-sm">{n.message}</Text>
               </div>
-
-              {/* Right side */}
               <div className="flex items-center space-x-3">
                 <Text size="text-sm">{time}</Text>
                 <Button

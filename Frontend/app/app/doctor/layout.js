@@ -1,21 +1,55 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Notify from "@/components/Notify";
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { url } from "@/url";
 
 export default function DoctorLayout({ children }) {
-  const [doctorId, setDoctorId] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    const id = localStorage.getItem("id");
-    setDoctorId(id);
+ 
+    async function fetchData() {
+      try {
+        const id = localStorage.getItem("id");
+        const res = await axios.get(`${url}/notification/doctor/${id}`);
+        const patients = res.data.data.patients || [];
+        console.log("Fetched patients:", patients);
+
+        const formattedNotifications = patients.flatMap((p) =>
+          (p.notifications || [])
+            .filter((note) => note.alert !== "green")
+            .map((note) => ({
+              message: note.message,
+              patientId: p._id,
+              patientName: p.fullname,
+              bed: p.assigned_bed,
+              uploadedAt: new Date(note.uploadedAt),
+              color: note.alert || "default",
+            }))
+        );
+
+        formattedNotifications.sort((a, b) => b.uploadedAt - a.uploadedAt);
+        const finalNotifications = formattedNotifications.map((n) => ({
+          ...n,
+          time: n.uploadedAt.toLocaleString(),
+        }));
+
+        setNotifications(finalNotifications);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    }
+
+    fetchData();
   }, []);
+
   return (
     <div className="flex">
       <Navbar role="doctor" />
-      {children}
-      <Notify role="doctor" id={doctorId} />
+      <div className="flex-1">{children}</div>
+      <Notify notifications={notifications} />
     </div>
   );
 }

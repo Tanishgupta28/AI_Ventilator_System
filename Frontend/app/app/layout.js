@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
       <body className="flex flex-col h-screen overflow-hidden">
         <Title />
         <Providers>
-          <main className="flex-1 overflow-hidden">{children}</main>
+          <main className="flex-1 overflow-hidden bg-blue-50">{children}</main>
         </Providers>
       </body>
     </html>

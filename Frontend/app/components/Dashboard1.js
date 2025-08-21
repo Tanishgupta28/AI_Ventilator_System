@@ -13,10 +13,14 @@ export default function Dashboard1({ role, id, info }) {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
+    if (!id || !role) return;
     async function fetchData() {
       try {
+        const id = localStorage.getItem("id");
         const res = await axios.get(`${url}/notification/${role}/${id}`);
-        const patientsWithAge = (res.data.data.patients || []).map((p) => ({
+        const patientList =
+          res.data?.data?.patients || res.data?.patients || [];
+        const patientsWithAge = patientList.map((p) => ({
           ...p,
           age: calculateAge(p.dob),
         }));
@@ -33,7 +37,7 @@ export default function Dashboard1({ role, id, info }) {
     return patients.flatMap((p) =>
       (p.notifications || []).map((notif) => ({
         notifId: notif._id,
-        patientId: p._id,
+        patientId: p.id,
         fullname: p.fullname || "Unknown",
         age: p.age || "Unknown",
         bed: p.assigned_bed || "Unknown",
@@ -42,6 +46,7 @@ export default function Dashboard1({ role, id, info }) {
       }))
     );
   }, [patients]);
+  console.log("All Notifications:", allNotifications);
 
   return (
     <div className="p-6 flex-1 flex flex-col items-center gap-10 h-screen overflow-y-auto pb-20">
@@ -60,8 +65,8 @@ export default function Dashboard1({ role, id, info }) {
                 key={item.notifId}
                 href={
                   info
-                    ? `/doctor/patient/${item.patientId}/${item.notifId}`
-                    : `/caremanager/${item.patientId}`
+                    ? `/${role}/patient/${item.patientId}/${item.notifId}`
+                    : `/admin/caremanager/${item.patientId}`
                 }
               >
                 <Box
