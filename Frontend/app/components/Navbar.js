@@ -11,7 +11,7 @@ export default function Navbar({ role }) {
   };
 
   return (
-    <nav className="w-30 h-screen bg-white text-gray-800 flex flex-col p-0 fixed left-0 top-16 space-y-6 pt-6">
+    <nav className="w-26 h-screen bg-white text-gray-800 flex flex-col p-0 fixed left-0 top-16 space-y-6 pt-6">
       <div className="flex flex-col space-y-6 flex-grow">
         {(role === "doctor" || role === "nurse") && (
           <Link href={`/${role}`}>
@@ -24,14 +24,14 @@ export default function Navbar({ role }) {
               <IconBox
                 label="Add Patient"
                 image="/addpatient.png"
-                bgColor="bg-green-100"
+                bgColor=""
               />
             </Link>
             <Link href="/admin/caremanager">
               <IconBox
                 label="Care Manager"
                 image="/caremanager.png"
-                bgColor="bg-yellow-100"
+                bgColor=""
               />
             </Link>
           </>
