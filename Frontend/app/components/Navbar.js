@@ -39,7 +39,7 @@ export default function Navbar({ role }) {
       </div>
       <div className="mt-auto mb-16 px-4 space-y-6">
         <div onClick={handleSignOut}>
-          <IconBox label="Sign Out" image="/help.png" bgColor="" />
+          <IconBox label="Sign Out" image="/signout.png" bgColor="" />
         </div>
         <Link href="/help">
           <IconBox label="Help" image="/help.png" bgColor="" />

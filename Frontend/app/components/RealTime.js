@@ -33,7 +33,7 @@ export default function RealTime({
     <div className="w-64 h-72 bg-white rounded-2xl shadow-lg p-5 flex flex-col justify-between border border-gray-200">
       <div className="flex items-start gap-6">
         <div className="flex flex-col items-center">
-          <div className="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-lg">
+          <div className="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full">
             <Image src={icon} alt="OxygenSaturation Icon" width={35} height={35} />
           </div>
           <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
