@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Box from "./Box";
+import RealTime from "./RealTime";
 import axios from "axios";
 import Link from "next/link";
 import { url } from "@/url";
@@ -40,19 +41,26 @@ export default function Dashboard1({ role, doctorId }) {
             alertConfig[alertType] || alertConfig.default;
 
           return (
-            <Link
-              key={p._id}
-              href={`/doctor/patient/${p._id}/${p.newNotification?.[0]?._id}`}
-            >
-              <Box
-                name={p.fullname || "Unknown"}
-                age={p.age || "Unknown"}
-                bed={p.assigned_bed || "Unknown"}
-                image={p.image || "/hospitalIcon.png"}
-                bgColor={bgColor}
-                alert={alertImage}
+            <div key={p._id} className="flex flex-col gap-4">
+              <Link
+                href={`/doctor/patient/${p._id}/${p.newNotification?.[0]?._id}`}
+              >
+                <Box
+                  name={p.fullname || "Unknown"}
+                  age={p.age || "Unknown"}
+                  bed={p.assigned_bed || "Unknown"}
+                  image={p.image || "/hospitalIcon.png"}
+                  bgColor={bgColor}
+                  alert={alertImage}
+                />
+              </Link>
+
+              <RealTime
+                label="Oxygen Saturation"
+                value={`${p.liveReadings?.OxygenSaturation || "N/A"}%`}
+                icon="/OxygenSaturation.png"
               />
-            </Link>
+            </div>
           );
         })}
       </div>
