@@ -11,6 +11,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 import memberRoutes from "./routes/memberRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
+import medicationRoutes from  "./routes/medicationRoutes.js";
+import voiceRoutes from "./routes/voiceRoutes.js";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -44,6 +46,8 @@ app.use('/patient',patientRoutes);
 app.use('/member',memberRoutes);
 app.use('/admin',adminRoutes);
 app.use('/notification', notificationRoutes);
+app.use('/medication', medicationRoutes);
+app.use('/voice', voiceRoutes);
 
 
 connectMongo();

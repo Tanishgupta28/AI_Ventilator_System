@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-const messageSchema = new Schema({
+const medicationSchema = new Schema({
   patient: {
     type: Schema.Types.ObjectId,
     ref: "Patient",
@@ -16,6 +16,6 @@ const messageSchema = new Schema({
   }
 });
 
-const Message = model('Message', messageSchema);
+const Medication = model('Medication', medicationSchema);
 
-export default Message;
+export default Medication;

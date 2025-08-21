@@ -52,6 +52,14 @@ const patientSchema = new Schema({
   nurse: [{
     type: Schema.Types.ObjectId,
     ref: 'Nurse'
+  }],
+  voice: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Voice'
+  }],
+  medication: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Medication'
   }]
 });
 
