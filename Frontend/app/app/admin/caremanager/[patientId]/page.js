@@ -18,6 +18,7 @@ export default function PatientDetails() {
   const [data, setData] = useState({});
   const [audio, setAudio] = useState([]);
   const [medications, setMedications] = useState([]);
+  const [members, setMembers] = useState([]);
   // const [length, setLength] = useState(0);
 
   useEffect(() => {
@@ -30,6 +31,9 @@ export default function PatientDetails() {
         const mres = await axios.get(`${url}/medication/${patientId}`);
         console.log("Medications:", mres.data.data.medication);
         setMedications(mres.data.data.medication || []);
+        const membersRes = await axios.get(`${url}/member/patient/${patientId}`);
+        console.log("Members:", membersRes.data.data);
+        setMembers(membersRes.data.data || []);
       } catch (err) {
         console.error("Error fetching patient details:", err);
       }
@@ -81,8 +85,8 @@ export default function PatientDetails() {
                       ? voice.voice
                       : `https://${voice.voice}`
                   }
-                  width={220}
-                  length={voice.length || 0}
+                  width={1000}
+                  length={8}
                 />
               </div>
             ))
@@ -111,9 +115,15 @@ export default function PatientDetails() {
                 </Button>
               </div>
               <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-2 no-scrollbar">
-                <ProfileCard name="Mithali Mishra" role="Nurse" />
-                <ProfileCard name="Manuel Zimmer" role="Father" />
-                <ProfileCard name="Dr. Roushan Sharma" role="Doctor" />
+                {members.length > 0 ? (
+                  members.map((member) => (
+                    <ProfileCard key={member._id} name={member.name} role={member.role} />
+                  ))
+                ) : (
+                  <Text size="text-sm" color="text-gray-500">
+                    No members added yet
+                  </Text>
+                )}
               </div>
             </div>
 

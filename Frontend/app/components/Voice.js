@@ -34,8 +34,6 @@ function Voice({ voices = [], onSubmit }) {
   return (
     <div className="w-[800px] shadow-lg rounded-2xl p-6 flex flex-col items-center bg-gradient-to-b from-purple-50 to-purple-100">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Voice Messages</h2>
-
-      {/* Scrollable List */}
       <div className="flex flex-col gap-3 max-h-48 overflow-y-auto w-full pr-2 no-scrollbar pb-8">
         {items.map((item, idx) => (
           <div
@@ -69,8 +67,6 @@ function Voice({ voices = [], onSubmit }) {
           </div>
         )}
       </div>
-
-      {/* Floating Button */}
       {!isAdding ? (
         <button
           onClick={handleAddClick}
