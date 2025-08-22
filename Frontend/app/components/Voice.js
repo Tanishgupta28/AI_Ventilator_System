@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AudioPlayer from "./Audio";
 import Text from "./Text";
 
@@ -7,6 +7,11 @@ function Voice({ voices = [], onSubmit }) {
   const [isAdding, setIsAdding] = useState(false);
   const [newAudio, setNewAudio] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+
+  // ✅ Update when voices prop changes
+  useEffect(() => {
+    setItems(voices);
+  }, [voices]);
 
   const handleAddClick = () => setIsAdding(true);
 
@@ -17,9 +22,9 @@ function Voice({ voices = [], onSubmit }) {
       newAudio instanceof File ? URL.createObjectURL(newAudio) : newAudio;
 
     const newItem = { audio: audioURL, message: newMessage };
-    const updatedItems = [...items, newItem];
-    setItems(updatedItems);
-    onSubmit && onSubmit({ audio: newAudio, message: newMessage });
+    setItems((prev) => [...prev, newItem]);
+
+    onSubmit && onSubmit({ file: newAudio, text: newMessage });
 
     setNewAudio(null);
     setNewMessage("");
@@ -37,17 +42,9 @@ function Voice({ voices = [], onSubmit }) {
             key={idx}
             className="flex justify-between items-center px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200"
           >
-            <span className="text-sm font-medium">
-              {item.audio ? (
-                <div className="w-70">
-                  {" "}
-                  {/* limit width of audio player */}
-                  <AudioPlayer src={item.audio} />
-                </div>
-              ) : (
-                "No Audio"
-              )}
-            </span>
+            <div className="w-70">
+              {item.audio ? <AudioPlayer src={item.audio} /> : "No Audio"}
+            </div>
             <span className="text-sm font-semibold text-purple-700 border border-purple-300 bg-purple-50 rounded-md px-3 py-1 w-[150px] h-[50px] truncate flex justify-center items-center">
               <Text>{item.message || "No Message"}</Text>
             </span>

@@ -1,47 +1,79 @@
 "use client";
-import AudioPlayer from "@/components/Audio";
-import Button from "@/components/Button";
-import Medication from "@/components/Medication";
-import NotifyBox from "@/components/NotifyBox";
 import Profile from "@/components/Profile";
-import ProfileCard from "@/components/ProfileCard";
-import RealTime from "@/components/RealTime";
-import Text from "@/components/Text";
-import TimeTag from "@/components/TimeTag";
 import Voice from "@/components/Voice";
-import { alertConfig } from "@/lib/alert";
-import { calculateAge } from "@/lib/dob";
 import { url } from "@/url";
 import axios from "axios";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function PatientDetails() {
   const { patientId } = useParams();
-  const id = patientId;
-  const router = useRouter();
   const [data, setData] = useState({});
-  const [length, setLength] = useState(0);
+  const [voices, setVoices] = useState([]);
 
   useEffect(() => {
-    async function fetchPatientDetails() {
+    (async () => {
       try {
-        const response = await axios.get(`${url}/patient/${patientId}`);
-        console.log(response.data.data);
-        setData(response.data.data);
+        const patientRes = await axios.get(`${url}/patient/${patientId}`);
+        setData(patientRes.data.data);
+
+        const voiceRes = await axios.get(`${url}/voice/${patientId}`);
+        const raw = voiceRes.data?.data || [];
+
+        const normalized = raw.map((v) => {
+          const src = typeof v?.voice === "string" ? v.voice : "";
+          const audio = src
+            ? src.startsWith("http")
+              ? src
+              : `https://${src}`
+            : "";
+          return { audio, message: v?.text ?? "" };
+        });
+
+        setVoices(normalized);
       } catch (err) {
         console.error("Error fetching patient details:", err);
       }
-    }
-    fetchPatientDetails();
+    })();
   }, [patientId]);
+
+  const handleVoiceSubmit = async ({ file, text }) => {
+    try {
+      const formData = new FormData();
+      formData.append("upload", file);
+      formData.append("text", text);
+
+      const res = await axios.post(
+        `${url}/voice/register/${patientId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      const saved = res.data?.data?.voice;
+      const src = typeof saved?.voice === "string" ? saved.voice : "";
+      const audio = src
+        ? src.startsWith("http")
+          ? src
+          : `https://${src}`
+        : URL.createObjectURL(file);
+
+      setVoices((prev) => [...prev, { audio, message: saved?.text ?? text }]);
+    } catch (err) {
+      console.error(
+        "Error uploading voice:",
+        err.response?.data || err.message
+      );
+    }
+  };
 
   return (
     <div className="p-6 flex-1 flex flex-col gap-6 h-screen overflow-y-auto ml-40">
       <div className="flex ml-100">
         <Image src="/lovelogo.png" alt="Add Patient" width={150} height={100} />
       </div>
+
       <div className="w-[900px] bg-white shadow-lg rounded-2xl flex flex-col items-center justify-start overflow-hidden">
         <Profile
           name={data?.name}
@@ -53,21 +85,7 @@ export default function PatientDetails() {
           namesize="text-3xl"
           agesize="text-xl"
         />
-        <Voice
-          voices={[
-            {
-              audio: "/first.mp3",
-              message: "Anger",
-            },
-            {
-              audio: "/first.mp3",
-              message: "Depression",
-            },
-          ]}
-          onSubmit={(newVoice) => {
-            console.log("Send to backend:", newVoice);
-          }}
-        />
+        <Voice voices={voices} onSubmit={handleVoiceSubmit} />
       </div>
     </div>
   );

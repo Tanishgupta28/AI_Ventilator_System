@@ -25,6 +25,7 @@ router.post(
       date: new Date(date),
       msg,
     });
+    
 
     patient.medication.push(newMedication._id);
     await patient.save();

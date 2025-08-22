@@ -43,6 +43,12 @@ router.post(
 
     await existingPatient.save();
 
+    const io = req.app.get("io");
+    io.emit("newNotification", {
+      notification: newNotification,
+      patient: existingPatient,
+    });
+
     return res.success(201, "Notification registered successfully", {
       notification: newNotification,
       patient: existingPatient,
@@ -154,7 +160,7 @@ router.get(
     }
 
     const patients = await Patient.find()
-      .select("fullname dob assigned_bed newNotification oldNotification") // only fetch needed fields
+      .select("fullname dob assigned_bed newNotification oldNotification")
       .populate("newNotification")
       .populate("oldNotification");
 
@@ -179,6 +185,7 @@ router.get(
         notifications: notificationsToShow,
       };
     });
+    
 
     return res.success(
       200,
@@ -217,6 +224,11 @@ router.post(
     }
 
     await patient.save();
+    const io = req.app.get("io");
+    io.emit("updateNotification", {
+      notification,
+      patient,
+    });
 
     return res.success(200, "Notification updated successfully", {
       notification,

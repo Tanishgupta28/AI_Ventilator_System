@@ -8,45 +8,61 @@ import { url } from "@/url";
 import { calculateAge } from "@/lib/dob";
 import { alertConfig } from "@/lib/alert";
 import Image from "next/image";
+import { io } from "socket.io-client";
+
+const socket = io(url);
 
 export default function Dashboard1({ role, id, info }) {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
     if (!id || !role) return;
+
     async function fetchData() {
       try {
-        const id = localStorage.getItem("id");
-        const res = await axios.get(`${url}/notification/${role}/${id}`);
+        const userId = localStorage.getItem("id");
+        const res = await axios.get(`${url}/notification/${role}/${userId}`);
         const patientList =
           res.data?.data?.patients || res.data?.patients || [];
         const patientsWithAge = patientList.map((p) => ({
           ...p,
           age: calculateAge(p.dob),
         }));
-        console.log("Patients with age:", patientsWithAge);
         setPatients(patientsWithAge);
       } catch (err) {
         console.error("Error fetching patients:", err);
       }
     }
-
+    
     fetchData();
+
+    const socket = io(url);
+
+    socket.on("newNotification", () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [id, role]);
+
   const allNotifications = useMemo(() => {
-    return patients.flatMap((p) =>
-      (p.notifications || []).map((notif) => ({
-        notifId: notif._id,
-        patientId: p.id,
-        fullname: p.fullname || "Unknown",
-        age: p.age || "Unknown",
-        bed: p.assigned_bed || "Unknown",
-        image: p.image || "/hospitalIcon.png",
-        alertType: notif.alert || "default",
-      }))
-    );
+    return patients
+      .flatMap((p) =>
+        (p.notifications || []).map((notif) => ({
+          notifId: notif._id,
+          patientId: p.id,
+          fullname: p.fullname || "Unknown",
+          age: p.age || "Unknown",
+          bed: p.assigned_bed || "Unknown",
+          image: p.image || "/hospitalIcon.png",
+          alertType: notif.alert || "default",
+          uploadedAt: notif.uploadedAt || Date.now(),
+        }))
+      )
+      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
   }, [patients]);
-  console.log("All Notifications:", allNotifications);
 
   return (
     <div className="p-6 flex-1 flex flex-col items-center gap-10 h-screen overflow-y-auto pb-20">

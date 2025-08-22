@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Medication({ schedules = [], onSubmit }) {
   const [items, setItems] = useState(schedules);
   const [isAdding, setIsAdding] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newTime, setNewTime] = useState("");
+
+  useEffect(() => {
+    setItems(schedules);
+  }, [schedules]);
 
   const handleAddClick = () => setIsAdding(true);
 
