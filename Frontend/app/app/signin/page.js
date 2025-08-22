@@ -41,6 +41,7 @@ export default function LoginPage() {
         <option value="nurse">Nurse</option>
         <option value="member">Member</option>
         <option value="admin">Admin</option>
+        <option value="patient">Patient</option>
       </select>
       <input
         type="email"

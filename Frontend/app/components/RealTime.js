@@ -8,6 +8,8 @@ export default function RealTime({
   value = "98%",
   icon = "/OxygenSaturation.png",
   data = [95, 96, 97, 98, 97, 99, 98],
+  graphColor = "#eb7425",   // NEW PROP
+  iconBg = "bg-orange-100", // NEW PROP (Tailwind class)
 }) {
   let status = "";
   let statusColor = "";
@@ -30,11 +32,12 @@ export default function RealTime({
   const chartData = data.map((d, i) => ({ time: i, value: d }));
 
   return (
-    <div className="w-64 h-72 bg-white rounded-2xl shadow-lg p-5 flex flex-col justify-between border border-gray-200">
+    <div className="w-[220px] h-[250px] bg-white rounded-2xl shadow-lg p-4 flex flex-col justify-between border border-gray-200">
       <div className="flex items-start gap-6">
         <div className="flex flex-col items-center">
-          <div className="flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full">
-            <Image src={icon} alt="OxygenSaturation Icon" width={35} height={35} />
+          {/* ICON WITH CUSTOM BG */}
+          <div className={`flex items-center justify-center w-16 h-16 ${iconBg} rounded-full`}>
+            <Image src={icon} alt="Icon" width={35} height={35} />
           </div>
           <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
           {status && (
@@ -52,13 +55,14 @@ export default function RealTime({
         </div>
       </div>
 
+      {/* CHART WITH CUSTOM COLOR */}
       <div className="h-28 mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <defs>
-              <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#eb7425" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#eb7425" stopOpacity={0} />
+              <linearGradient id={`colorGradient-${graphColor}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={graphColor} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={graphColor} stopOpacity={0} />
               </linearGradient>
             </defs>
 
@@ -66,7 +70,7 @@ export default function RealTime({
               type="monotone"
               dataKey="value"
               stroke="none"
-              fill="url(#colorOrange)"
+              fill={`url(#colorGradient-${graphColor})`}
               fillOpacity={0.4}
               activeDot={false}
             />
@@ -74,7 +78,7 @@ export default function RealTime({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#eb7425"
+              stroke={graphColor}
               strokeWidth={2}
               dot={false}
             />
