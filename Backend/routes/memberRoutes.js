@@ -1,7 +1,7 @@
 import express from "express";
 import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
-import Member from "../models/member.js";   // <-- make sure this exists
+import Member from "../models/member.js";   
 import Image from "../models/image.js";
 import dotenv from "dotenv";
 import aws from "aws-sdk";
@@ -53,13 +53,11 @@ router.post("/register/:id", (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // ✅ Step 1: save image in Image collection
       let imageDoc = null;
       if (req.file) {
         imageDoc = await Image.create({ url: req.file.location });
       }
 
-      // ✅ Step 2: create member with image reference (_id, not url)
       const newMember = await Member.create({
         fullname,
         email,
@@ -69,7 +67,6 @@ router.post("/register/:id", (req, res) => {
         image: imageDoc ? imageDoc._id : null,
       });
 
-      // ✅ Step 3: link member to patient
       const updatedPatient = await Patient.findByIdAndUpdate(
         patientId,
         { $push: { member: newMember._id } },
@@ -85,7 +82,7 @@ router.post("/register/:id", (req, res) => {
         data: {
           member: newMember,
           patient: updatedPatient,
-          image: imageDoc, // return image URL so frontend can use
+          image: imageDoc, 
         },
       });
     } catch (error) {
@@ -93,6 +90,51 @@ router.post("/register/:id", (req, res) => {
     }
   }));
 });
+
+router.post(
+  "/:id/voice",
+  (req, res) => {
+    voiceUpload(req, res, safeHandler(async (err) => {
+      if (err) return res.error(500, err.message);
+
+      const patientId = req.params.id;
+      const { memberName } = req.body;
+
+      if (!memberName) {
+        return res.error(400, "Member name is required", "VALIDATION_ERROR");
+      }
+
+      if (!req.file) {
+        return res.error(400, "Voice file is required", "VALIDATION_ERROR");
+      }
+
+      const voiceDoc = await Voice.create({
+        memberName,
+        url: req.file.location,
+      });
+
+      const updatedPatient = await Patient.findByIdAndUpdate(
+        patientId,
+        { $push: { voice: voiceDoc._id } },
+        { new: true }
+      );
+
+      if (!updatedPatient) {
+        return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+      }
+
+      return res.success(201, "Voice saved and linked to patient successfully", {
+        voice: {
+          _id: voiceDoc._id,
+          memberName: voiceDoc.memberName,
+          url: voiceDoc.url,
+        },
+        patient: updatedPatient,
+      });
+    }));
+  }
+);
+
 
 router.get(
   "/:id",
@@ -121,6 +163,7 @@ router.get(
     });
   })
 );
+
 
 
 router.post(

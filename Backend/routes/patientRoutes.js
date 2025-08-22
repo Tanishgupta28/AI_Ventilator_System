@@ -177,7 +177,6 @@ router.get(
     }
 
     const image = await Image.findById(patient.image);
-    console.log(image);
 
     return res.success(200, "Patient details fetched successfully", {
       name: patient.fullname,

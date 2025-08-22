@@ -24,7 +24,11 @@ const memberSchema = new Schema({
   image: {
     type: Schema.Types.ObjectId,
     ref: 'Image'
-  }
+  },
+  membervoice: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Voice'
+  }],
 });
 
 const Member = model('Member', memberSchema);
