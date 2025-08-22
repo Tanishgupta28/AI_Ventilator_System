@@ -1,72 +1,90 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const patientSchema = new Schema({
   fullname: {
     type: String,
-    required: [true, "Full name is required"]
+    required: [true, "Full name is required"],
   },
   email: {
     type: String,
-    required: [true, "Email is required"]
+    required: [true, "Email is required"],
   },
   contactno_Primary: {
     type: String,
-    required: [true, "Contact number is required"]
+    required: [true, "Contact number is required"],
   },
   contactno_Secondary: {
     type: String,
-    required: [true, "Contact number is required"]
+    required: [true, "Contact number is required"],
   },
   gender: {
     type: String,
-    required: [true, "Gender is required"]
+    required: [true, "Gender is required"],
   },
   dob: {
     type: Date,
-    required: [true, "Date of birth is required"]
+    required: [true, "Date of birth is required"],
   },
   assigned_bed: {
     type: String,
-    required: [true, "Assigned bed is required"]
+    required: [true, "Assigned bed is required"],
   },
   address: {
     type: String,
-    required: [true, "Address is required"]
+    required: [true, "Address is required"],
   },
-  member: [{
+  member: [
+    {
       type: Schema.Types.ObjectId,
-      ref: 'Member'
-  }],
-  oldNotification: [{
+      ref: "Member",
+    },
+  ],
+  oldNotification: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Notification",
+    },
+  ],
+  newNotification: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Notification",
+    },
+  ],
+  doctor: {
     type: Schema.Types.ObjectId,
-    ref: 'Notification'
-  }],
-  newNotification: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Notification'
-  }],
-  doctor:{
-    type: Schema.Types.ObjectId,
-    ref: 'Doctor'
+    ref: "Doctor",
   },
-  nurse: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Nurse'
-  }],
-  voice: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Voice'
-  }],
-  medication: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Medication'
-  }],
+  nurse: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Nurse",
+    },
+  ],
+  voice: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Voice",
+    },
+  ],
+  medication: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Medication",
+    },
+  ],
   image: {
     type: Schema.Types.ObjectId,
-    ref: 'Image'
-  }
+    ref: "Image",
+  },
+  membervoice: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Voice",
+    },
+  ],
 });
 
-const Patient = model('Patient', patientSchema);
+const Patient = model("Patient", patientSchema);
 
 export default Patient;

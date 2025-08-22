@@ -1,36 +1,42 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const memberSchema = new Schema({
   fullname: {
     type: String,
-    required: [true, "Full name is required"]
+    required: [true, "Full name is required"],
   },
   email: {
     type: String,
-    required: [true, "Email is required"]
+    required: [true, "Email is required"],
   },
   password: {
     type: String,
-    required: [true, "Password is required"]
+    required: [true, "Password is required"],
   },
   contactno: {
     type: String,
-    required: [true, "Contact number is required"]
+    required: [true, "Contact number is required"],
   },
-  role:{
+  role: {
     type: String,
-    required: [true, "Role is required"]
+    required: [true, "Role is required"],
   },
   image: {
     type: Schema.Types.ObjectId,
-    ref: 'Image'
+    ref: "Image",
   },
-  membervoice: [{
+  membervoice: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Voice",
+    },
+  ],
+  patient: {
     type: Schema.Types.ObjectId,
-    ref: 'Voice'
-  }],
+    ref: "Patient",
+  },
 });
 
-const Member = model('Member', memberSchema);
+const Member = model("Member", memberSchema);
 
 export default Member;

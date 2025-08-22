@@ -94,28 +94,28 @@ router.post("/register/:id", (req, res) => {
 router.post(
   "/:id/voice",
   (req, res) => {
-    voiceUpload(req, res, safeHandler(async (err) => {
+    upload(req, res, safeHandler(async (err) => {
       if (err) return res.error(500, err.message);
 
       const patientId = req.params.id;
-      const { memberName } = req.body;
 
-      if (!memberName) {
-        return res.error(400, "Member name is required", "VALIDATION_ERROR");
+      const member = await Member.findById(patientId);
+      if (!member) {
+        return res.error(404, "Member not found", "MEMBER_NOT_FOUND");
       }
-
       if (!req.file) {
         return res.error(400, "Voice file is required", "VALIDATION_ERROR");
       }
-
-      const voiceDoc = await Voice.create({
-        memberName,
-        url: req.file.location,
+      const voiceAdd = await Voice.create({
+        text:member.fullname,
+        voice:req.file.location,
+        patient:patientId
       });
+      await voiceAdd.save();
 
       const updatedPatient = await Patient.findByIdAndUpdate(
         patientId,
-        { $push: { voice: voiceDoc._id } },
+        { $push: { voice: voiceAdd._id } },
         { new: true }
       );
 
@@ -125,15 +125,62 @@ router.post(
 
       return res.success(201, "Voice saved and linked to patient successfully", {
         voice: {
-          _id: voiceDoc._id,
-          memberName: voiceDoc.memberName,
-          url: voiceDoc.url,
+          _id: voiceAdd._id,
+          text: voiceAdd.text,
+          url: voiceAdd.voice,
         },
         patient: updatedPatient,
       });
     }));
   }
 );
+
+router.get(
+  "/patient/:id",
+  safeHandler(async (req, res) => {
+    const patientId = req.params.id;
+
+    const patient = await Patient.findById(patientId)
+      .populate("doctor", "fullname")
+      .populate("nurse", "fullname")
+      .populate({
+        path: "member",                 
+        select: "fullname role image",  
+        populate: { path: "image", select: "url" }
+      });
+
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+
+    const membersDetails = patient.member.map((m) => ({
+      id: m._id,
+      fullname: m.fullname,
+      role: m.role,
+      image: m.image ? m.image.url : null,  
+    }));
+
+    const doctorDetails = patient.doctor
+      ? {
+          id: patient.doctor._id,
+          fullname: patient.doctor.fullname,
+        }
+      : null;
+
+    const nurseDetails = patient.nurse.map((nurse) => ({
+      id: nurse._id,
+      fullname: nurse.fullname,
+    }));
+
+    return res.success(200, "Patient details fetched successfully", {
+      members: membersDetails,
+      doctor: doctorDetails,
+      nurse: nurseDetails,
+    });
+  })
+);
+
+
 
 
 router.get(
