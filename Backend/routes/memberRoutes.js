@@ -1,7 +1,7 @@
 import express from "express";
 import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
-import Member from "../models/member.js";   
+import Member from "../models/member.js";
 import Image from "../models/image.js";
 import dotenv from "dotenv";
 import aws from "aws-sdk";
@@ -32,108 +32,69 @@ const upload = multer({
       cb(null, file.mimetype);
     },
   }),
-}).single('image'); 
+}).single("image");
 
 router.post("/register/:id", (req, res) => {
-  upload(req, res, safeHandler(async (err) => {
-    if (err) return res.error(500, err.message);
-
-    try {
-      const patientId = req.params.id;
-      const { fullname, email, password, contactno, role } = req.body;
-
-      if (!fullname || !email || !password || !contactno || !role) {
-        return res.error(400, "All fields are required", "VALIDATION_ERROR");
-      }
-
-      const existingMember = await Member.findOne({ email });
-      if (existingMember) {
-        return res.error(409, "Email already exists", "EMAIL_EXISTS");
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      let imageDoc = null;
-      if (req.file) {
-        imageDoc = await Image.create({ url: req.file.location });
-      }
-
-      const newMember = await Member.create({
-        fullname,
-        email,
-        password: hashedPassword,
-        contactno,
-        role,
-        image: imageDoc ? imageDoc._id : null,
-      });
-
-      const updatedPatient = await Patient.findByIdAndUpdate(
-        patientId,
-        { $push: { member: newMember._id } },
-        { new: true }
-      );
-
-      if (!updatedPatient) {
-        return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
-      }
-
-      return res.status(201).send({
-        message: "Member registered and linked to patient successfully",
-        data: {
-          member: newMember,
-          patient: updatedPatient,
-          image: imageDoc, 
-        },
-      });
-    } catch (error) {
-      return res.status(500).send({ error: error.message });
-    }
-  }));
-});
-
-router.post(
-  "/:id/voice",
-  (req, res) => {
-    upload(req, res, safeHandler(async (err) => {
+  upload(
+    req,
+    res,
+    safeHandler(async (err) => {
       if (err) return res.error(500, err.message);
 
-      const patientId = req.params.id;
+      try {
+        const patientId = req.params.id;
+        const { fullname, email, password, contactno, role } = req.body;
 
-      const member = await Member.findById(patientId);
-      if (!member) {
-        return res.error(404, "Member not found", "MEMBER_NOT_FOUND");
+        if (!fullname || !email || !password || !contactno || !role) {
+          return res.error(400, "All fields are required", "VALIDATION_ERROR");
+        }
+
+        const existingMember = await Member.findOne({ email });
+        if (existingMember) {
+          return res.error(409, "Email already exists", "EMAIL_EXISTS");
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        let imageDoc = null;
+        if (req.file) {
+          imageDoc = await Image.create({ url: req.file.location });
+        }
+
+        const newMember = await Member.create({
+          fullname,
+          email,
+          password: hashedPassword,
+          contactno,
+          role,
+          image: imageDoc ? imageDoc._id : null,
+          patient: patientId,
+        });
+
+        const updatedPatient = await Patient.findByIdAndUpdate(
+          patientId,
+          { $push: { member: newMember._id } },
+          { new: true }
+        );
+
+        if (!updatedPatient) {
+          return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+        }
+
+        return res.status(201).send({
+          message: "Member registered and linked to patient successfully",
+          data: {
+            member: newMember,
+            patient: updatedPatient,
+            image: imageDoc,
+          },
+        });
+      } catch (error) {
+        return res.status(500).send({ error: error.message });
       }
-      if (!req.file) {
-        return res.error(400, "Voice file is required", "VALIDATION_ERROR");
-      }
-      const voiceAdd = await Voice.create({
-        text:member.fullname,
-        voice:req.file.location,
-        patient:patientId
-      });
-      await voiceAdd.save();
-
-      const updatedPatient = await Patient.findByIdAndUpdate(
-        patientId,
-        { $push: { voice: voiceAdd._id } },
-        { new: true }
-      );
-
-      if (!updatedPatient) {
-        return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
-      }
-
-      return res.success(201, "Voice saved and linked to patient successfully", {
-        voice: {
-          _id: voiceAdd._id,
-          text: voiceAdd.text,
-          url: voiceAdd.voice,
-        },
-        patient: updatedPatient,
-      });
-    }));
-  }
-);
+    })
+  );
+});
 
 router.get(
   "/patient/:id",
@@ -144,9 +105,9 @@ router.get(
       .populate("doctor", "fullname")
       .populate("nurse", "fullname")
       .populate({
-        path: "member",                 
-        select: "fullname role image",  
-        populate: { path: "image", select: "url" }
+        path: "member",
+        select: "fullname role image",
+        populate: { path: "image", select: "url" },
       });
 
     if (!patient) {
@@ -157,7 +118,7 @@ router.get(
       id: m._id,
       fullname: m.fullname,
       role: m.role,
-      image: m.image ? m.image.url : null,  
+      image: m.image ? m.image.url : null,
     }));
 
     const doctorDetails = patient.doctor
@@ -180,38 +141,34 @@ router.get(
   })
 );
 
-
-
-
 router.get(
   "/:id",
   safeHandler(async (req, res) => {
-    const memberId = req.params.id;
+    const patientId = req.params.id;
 
-    const member = await Member.findById(memberId)
-      .select("fullname email contactno role image")
-      .populate("image", "url"); 
-
-    if (!member) {
-      return res.error(404, "Member not found", "MEMBER_NOT_FOUND");
+    const patient = await Patient.findById(patientId).select("member");
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
     }
 
-    const memberDetails = {
+    const members = await Member.find({ _id: { $in: patient.member } })
+      .select("fullname email contactno role image")
+      .populate("image", "url");
+
+    const memberDetails = members.map((member) => ({
       id: member._id,
       fullname: member.fullname,
       email: member.email,
       contactno: member.contactno,
       role: member.role,
-      image: member.image ? member.image.url : null, 
-    };
+      image: member.image ? member.image.url : null,
+    }));
 
-    return res.success(200, "Member details fetched successfully", {
-      member: memberDetails,
+    return res.success(200, "Members fetched successfully", {
+      members: memberDetails,
     });
   })
 );
-
-
 
 router.post(
   "/login",

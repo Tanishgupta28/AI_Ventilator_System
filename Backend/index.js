@@ -13,6 +13,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
 import medicationRoutes from  "./routes/medicationRoutes.js";
 import voiceRoutes from "./routes/voiceRoutes.js";
+import memvoiceRoutes from "./routes/memvoiceRoutes.js";
 
 import dotenv from "dotenv";
 import http from "http";
@@ -61,6 +62,7 @@ app.use('/admin', adminRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/medication', medicationRoutes);
 app.use('/voice', voiceRoutes);
+app.use('/memvoice', memvoiceRoutes);
 
 connectMongo();
 
