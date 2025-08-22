@@ -91,6 +91,8 @@ router.post("/voice/:id", (req, res) => {
   });
 });
 
+
+
 router.get('/member/:id', safeHandler(async (req, res) => {
   const memberId = req.params.id;
 
@@ -122,6 +124,8 @@ router.get('/member/:id', safeHandler(async (req, res) => {
     member: memberDetails,
   });
 }));
+
+
 
 router.get('/patient/:id', safeHandler(async (req, res) => {
   const patientId = req.params.id;
