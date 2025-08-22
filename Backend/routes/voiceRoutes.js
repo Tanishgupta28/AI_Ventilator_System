@@ -77,4 +77,18 @@ router.post('/register/:id', (req, res) => {
   });
 });
 
+router.get('/:id', safeHandler(async (req, res) => {
+  const patientId = req.params.id;
+  const patient = await Patient.findById(patientId)
+    .select("voice")
+    .populate("voice");
+
+  if (!patient) {
+    return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+  }
+
+  return res.success(200, "Voice details fetched successfully", patient.voice);
+}));
+
+
 export default router;

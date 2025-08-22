@@ -19,7 +19,8 @@ router.post("/register", safeHandler(async (req, res) => {
     assigned_bed,
     address,
     doctorEmail,
-    nurseEmails
+    nurseEmails,
+    imageUrl   
   } = req.body;
 
   const doctor = await Doctor.findOne({ email: doctorEmail });
@@ -32,6 +33,11 @@ router.post("/register", safeHandler(async (req, res) => {
     return res.error(404, "No nurses found", "NURSES_NOT_FOUND");
   }
 
+  let imageDoc = null;
+  if (imageUrl) {
+    imageDoc = await Image.create({ url: imageUrl });
+  }
+
   const patient = new Patient({
     fullname,
     email,
@@ -42,7 +48,8 @@ router.post("/register", safeHandler(async (req, res) => {
     assigned_bed,
     address,
     doctor: doctor._id,
-    nurse: nurses.map(n => n._id)
+    nurse: nurses.map(n => n._id),
+    image: imageDoc ? imageDoc._id : null   
   });
 
   await patient.save();
@@ -58,7 +65,7 @@ router.post("/register", safeHandler(async (req, res) => {
   }
 
   const notification = new Notification({
-    message: "Patient added ",
+    message: "Patient added",
     alert: "green",      
     success: true, 
     patient: patient._id,     
@@ -72,9 +79,11 @@ router.post("/register", safeHandler(async (req, res) => {
 
   return res.success(201, "Patient registered successfully", { 
     patient,
-    notification
+    notification,
+    image: imageDoc
   });
 }));
+
 
 
 router.get(

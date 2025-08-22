@@ -20,6 +20,10 @@ const memberSchema = new Schema({
   role:{
     type: String,
     required: [true, "Role is required"]
+  },
+  image: {
+    type: Schema.Types.ObjectId,
+    ref: 'Image'
   }
 });
 

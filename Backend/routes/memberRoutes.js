@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(
   "/register/:id",
   safeHandler(async (req, res) => {
-    const { fullname, email, password, contactno, role } = req.body;
+    const { fullname, email, password, contactno, role, imageUrl } = req.body; 
     const patientId = req.params.id;
 
     if (!fullname || !email || !password || !contactno || !role) {
@@ -24,12 +24,18 @@ router.post(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let imageDoc = null;
+    if (imageUrl) {
+      imageDoc = await Image.create({ url: imageUrl });
+    }
+
     const newMember = await Member.create({
       fullname,
       email,
       password: hashedPassword,
       contactno,
       role,
+      image: imageDoc ? imageDoc._id : null 
     });
 
     const updatedPatient = await Patient.findByIdAndUpdate(
@@ -42,6 +48,7 @@ router.post(
             email: newMember.email,
             contactno: newMember.contactno,
             role: newMember.role,
+            image: imageDoc ? imageDoc._id : null  
           },
         },
       },
@@ -55,9 +62,11 @@ router.post(
     return res.success(201, "Member registered and linked to patient successfully", {
       member: newMember,
       patient: updatedPatient,
+      image: imageDoc
     });
   })
 );
+
 
 
 router.post(
