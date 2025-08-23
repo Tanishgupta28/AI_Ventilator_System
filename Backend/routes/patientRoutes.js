@@ -194,10 +194,11 @@ router.post("/login",safeHandler(async (req, res) => {
   if (!patient) {
     return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
   }
-
-  const token = patient.generateAuthToken();
-  return res.success(200, "Login successful", { token });
+  return res.success(200, "Login successful", {
+    patient: patient._id
+  });
 }));
+
 
 router.delete(
   "/:patientId",
