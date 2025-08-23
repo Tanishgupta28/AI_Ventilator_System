@@ -3,36 +3,29 @@ import Box2 from "./Box2";
 
 export default function Dashboard2() {
   return (
-    <div className="p-6 grid grid-cols-2 sm:grid-cols-3 gap-6">
-      {/* First 4 boxes */}
+    <div className="grid grid-cols-2 gap-x-80 gap-y-4 w-full max-w-md mx-auto">
       <Box1
-        text="Box 1"
-        color="#1E3A8A"
+        text="Change my position"
         borderColor="#2563EB"
-        icon="/img1.png"
+        icon="/accessibility.png"
       />
       <Box1
-        text="Box 2"
-        color="#065F46"
+        text="Tube is choking me"
         borderColor="#10B981"
-        icon="/img2.png"
+        icon="/ventilator.png"
       />
       <Box1
-        text="Box 3"
-        color="#78350F"
+        text="I am shivering"
         borderColor="#F59E0B"
-        icon="/img3.png"
+        icon="/device_thermostat.png"
       />
       <Box1
-        text="Box 4"
-        color="#7C2D12"
+        text="I am in pain"
         borderColor="#F87171"
-        icon="/img4.png"
+        icon="/emergency.png"
       />
-
-      {/* Yes / No Boxes */}
-      <Box2 text="YES" bgColor="green" icon="/yes.png" />
-      <Box2 text="NO" bgColor="red" icon="/no.png" />
+      <Box2 text="YES" bgColor="green" icon="/thumb_up.png" />
+      <Box2 text="NO" bgColor="red" icon="/thumb_down.png" />
     </div>
   );
 }
