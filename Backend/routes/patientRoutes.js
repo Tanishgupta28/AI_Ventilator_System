@@ -244,7 +244,7 @@ router.post(
       return res.error(400, "Text is required", "MISSING_TEXT");
     }
 
-    const patientId = "68a863c3f556f33c55ce8ea4";
+    const patientId = "68a86110f556f33c55ce8e8b";
 
     const voiceDoc = await Voice.findOne({ patient: patientId, text });
 
