@@ -13,6 +13,8 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
 import medicationRoutes from  "./routes/medicationRoutes.js";
 import voiceRoutes from "./routes/voiceRoutes.js";
+import memvoiceRoutes from "./routes/memvoiceRoutes.js";
+import { attachIO, startAgenda } from "./middlewares/agenda.js";
 
 import dotenv from "dotenv";
 import http from "http";
@@ -31,6 +33,8 @@ const io = new Server(server, {
 
 // Make io accessible inside routes
 app.set("io", io);
+attachIO(io);
+await startAgenda();
 
 app.use(helmet());
 app.use(hpp());
@@ -61,6 +65,7 @@ app.use('/admin', adminRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/medication', medicationRoutes);
 app.use('/voice', voiceRoutes);
+app.use('/memvoice', memvoiceRoutes);
 
 connectMongo();
 
@@ -72,6 +77,10 @@ app.use((err, req, res, next) => {
 // Socket.io connection handler
 io.on("connection", (socket) => {
   console.log("⚡ Client connected:", socket.id);
+
+  socket.on("joinPatient", (patientId) => {
+    socket.join(String(patientId));
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected:", socket.id);

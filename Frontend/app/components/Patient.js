@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InputField from "./Input";
 import Button from "./Button";
 import axios from "axios";
 import { url } from "@/url";
 
-export default function PatientForm() {
+export default function PatientForm({avatarFile}) {
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -18,6 +18,11 @@ export default function PatientForm() {
     doctorEmail: "",
     nurseEmails: "",
   });
+  useEffect(() => {
+    if (avatarFile) {
+      setFormData((prev) => ({ ...prev, image: avatarFile }));
+    }
+  }, [avatarFile]);
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
@@ -33,11 +38,34 @@ export default function PatientForm() {
   //   setFormData({ ...formData, nurses: [...formData.nurses, ""] });
   // };
 
-  const handleSave = async() => {
-    console.log("Saved Data:", formData);
-    const response=await axios.post(`${url}/patient/register`, formData);
-    console.log(response.data)
+  const handleSave = async () => {
+    try {
+      const data = new FormData();
+
+      // append normal fields
+      Object.keys(formData).forEach((key) => {
+        if (key !== "image" && formData[key]) {
+          data.append(key, formData[key]);
+        }
+      });
+
+      // append image separately
+      if (formData.image) {
+        data.append("image", formData.image);
+      }
+
+      const response = await axios.post(`${url}/patient/register`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Response:", response.data);
+    } catch (err) {
+      console.error("Error uploading patient:", err);
+    }
   };
+
 
   const handleReset = () => {
     setFormData({
@@ -51,6 +79,7 @@ export default function PatientForm() {
       address: "",
       doctorEmail: "",
       nurseEmails: "",
+      image: null,
     });
   };
 
@@ -151,10 +180,10 @@ export default function PatientForm() {
           />
         </div>
         {/* <div className="flex-1"> */}
-          {/* <label className="block text-gray-700 text-xs mb-1">
+        {/* <label className="block text-gray-700 text-xs mb-1">
             Nurse Emails
           </label> */}
-          {/* {formData.nurses.map((nurse, index) => (
+        {/* {formData.nurses.map((nurse, index) => (
             <InputField
               key={index}
               label={`Nurse Email`}
@@ -165,7 +194,7 @@ export default function PatientForm() {
               className="mb-2 w-full"
             />
           ))} */}
-          {/* <Button
+        {/* <Button
             onClick={addNurseField}
             bgColor="bg-green-500"
             width="w-40"

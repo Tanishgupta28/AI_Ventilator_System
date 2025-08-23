@@ -26,12 +26,15 @@ export default function PatientDetails() {
       try {
         const response = await axios.get(`${url}/patient/${patientId}`);
         setData(response.data.data);
+        console.log("Patient Data:", response.data.data);
         const ares = await axios.get(`${url}/voice/${patientId}`);
         setAudio(ares.data.data || []);
         const mres = await axios.get(`${url}/medication/${patientId}`);
         console.log("Medications:", mres.data.data.medication);
         setMedications(mres.data.data.medication || []);
-        const membersRes = await axios.get(`${url}/member/patient/${patientId}`);
+        const membersRes = await axios.get(
+          `${url}/member/patient/${patientId}`
+        );
         console.log("Members:", membersRes.data.data);
         setMembers(membersRes.data.data || []);
       } catch (err) {
@@ -55,6 +58,7 @@ export default function PatientDetails() {
           bool={false}
           width={900}
           iw={50}
+          image={data?.image}
         />
         <div className="flex items-center justify-between w-full px-4 pb-2">
           <Text size="text-2xl" bold color="text-black" font="font-sans">
@@ -115,9 +119,34 @@ export default function PatientDetails() {
                 </Button>
               </div>
               <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-2 no-scrollbar">
-                {members.length > 0 ? (
-                  members.map((member) => (
-                    <ProfileCard key={member._id} name={member.name} role={member.role} />
+                <ProfileCard
+                  key={members.doctor?.id}
+                  name={members.doctor?.fullname}
+                  role="Doctor"
+                  image={members.doctor?.image}
+                />
+                {members.nurse?.length > 0 ? (
+                  members.nurse.map((member) => (
+                    <ProfileCard
+                      key={member.id}
+                      name={member.fullname}
+                      role="Nurse"
+                      image={member?.image}
+                    />
+                  ))
+                ) : (
+                  <Text size="text-sm" color="text-gray-500">
+                    No members added yet
+                  </Text>
+                )}
+                {members.members?.length > 0 ? (
+                  members.members.map((member) => (
+                    <ProfileCard
+                      key={member.id}
+                      name={member.fullname}
+                      role={member.role}
+                      imgSrc={member.image}
+                    />
                   ))
                 ) : (
                   <Text size="text-sm" color="text-gray-500">
