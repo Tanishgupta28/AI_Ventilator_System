@@ -4,7 +4,7 @@ import Notify from "@/components/Notify";
 import axios from "axios";
 import { url } from "@/url";
 import { io } from "socket.io-client";
-import AudioPlayer from "@/components/Audio";
+import AudioPlayer2 from "@/components/Audio2";
 
 const socket = io(url);
 
@@ -35,9 +35,12 @@ export default function PatientLayout({ children }) {
     });
 
     // ✅ Listen for new audio URL
+    // ✅ Listen for new audio URL
     socket.on("newVoiceUrl", (data) => {
       console.log("Received new audio:", data);
-      setAudioUrl(data.voiceUrl);
+
+      // Always create a new unique url so React re-renders
+      setAudioUrl(`${data.voiceUrl}?t=${Date.now()}`);
       setText(data.text);
     });
 
@@ -50,14 +53,11 @@ export default function PatientLayout({ children }) {
 
   return (
     <div className="flex">
-      <div className="flex-1">
+      <div className="flex pl-55 pt-10">
         {children}
-
-        {/* Auto-play when audioUrl changes */}
         {audioUrl && (
-          <div className="fixed bottom-4 right-4 w-[400px]">
-            <AudioPlayer src={audioUrl} autoPlayOnNewUrl={true} />
-            <p className="text-gray-400 text-sm mt-2">{text}</p>
+          <div className="fixed bottom-4 right-4 w-[400px] hidden">
+            <AudioPlayer2 src={audioUrl} autoPlayOnNewUrl={true} />
           </div>
         )}
       </div>
