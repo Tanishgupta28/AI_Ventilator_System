@@ -5,6 +5,7 @@ import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
 import Notification from "../models/notification.js";
 import Image from "../models/image.js";
+import Voice from "../models/voice.js";
 
 import dotenv from "dotenv";
 import aws from "aws-sdk";
@@ -230,5 +231,28 @@ router.delete(
     return res.success(200, "Patient and related details deleted successfully");
   })
 );
+
+
+router.post("/text", safeHandler(async (req, res) => {
+  const { text } = req.body;
+
+  if (!text) {
+    return res.error(400, "Text is required", "MISSING_TEXT");
+  }
+
+  const patientId = "68a863c3f556f33c55ce8ea4";
+
+  const voiceDoc = await Voice.findOne({ patient: patientId, text });
+
+  if (!voiceDoc) {
+    return res.error(404, "Voice not found", "VOICE_NOT_FOUND");
+  }
+
+  return res.success(200, "Voice URL fetched successfully", {
+    voiceUrl: voiceDoc.voice,
+  });
+}));
+
+
 
 export default router;
