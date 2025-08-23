@@ -238,6 +238,7 @@ router.post(
   "/text",
   safeHandler(async (req, res) => {
     const { text } = req.body;
+    console.log("Received text:", text);
 
     if (!text) {
       return res.error(400, "Text is required", "MISSING_TEXT");
@@ -250,6 +251,7 @@ router.post(
     if (!voiceDoc) {
       return res.error(404, "Voice not found", "VOICE_NOT_FOUND");
     }
+    console.log("Voice document found:", voiceDoc);
 
     const io = req.app.get("io");
     io.emit("newVoiceUrl", {
