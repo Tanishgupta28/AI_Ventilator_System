@@ -6,22 +6,22 @@ export default function Dashboard2() {
     <div className="grid grid-cols-2 gap-x-80 gap-y-4 w-full max-w-md mx-auto">
       <Box1
         text="Change my position"
-        borderColor="#2563EB"
+        borderColor="#25eb8fff"
         icon="/accessibility.png"
       />
       <Box1
         text="Tube is choking me"
-        borderColor="#10B981"
+        borderColor="#9710b9ff"
         icon="/ventilator.png"
       />
       <Box1
         text="I am shivering"
-        borderColor="#F59E0B"
+        borderColor="#360bf5ff"
         icon="/device_thermostat.png"
       />
       <Box1
         text="I am in pain"
-        borderColor="#F87171"
+        borderColor="#f87171ff"
         icon="/emergency.png"
       />
       <Box2 text="YES" bgColor="green" icon="/thumb_up.png" />
