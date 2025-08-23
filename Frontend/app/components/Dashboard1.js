@@ -33,7 +33,7 @@ export default function Dashboard1({ role, id, info }) {
         console.error("Error fetching patients:", err);
       }
     }
-    
+
     fetchData();
 
     const socket = io(url);
@@ -66,14 +66,14 @@ export default function Dashboard1({ role, id, info }) {
 
   return (
     <div className="p-6 flex-1 flex flex-col items-start gap-10 h-screen overflow-y-auto pb-20">
-     <div className="flex justify-center w-full">
-    <Image src="/lovelogo.png" alt="Love Logo" width={150} height={100} />
-  </div>
+      <div className="flex justify-center w-full">
+        <Image src="/lovelogo.png" alt="Love Logo" width={150} height={100} />
+      </div>
 
       {allNotifications.length === 0 ? (
         <p className="text-gray-500 text-sm">No notifications available</p>
       ) : (
-        <div className="grid grid-cols-4 gap-15 w-full max-w-5xl pl-45">
+        <div className="grid grid-cols-4 gap-15 w-full max-w-5xl pl-45 ">
           {allNotifications.map((item) => {
             const { bgColor, alertImage } =
               alertConfig[item.alertType] || alertConfig.default;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { url } from "@/url";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -83,10 +84,12 @@ export default function LoginPage() {
       </div>
 
       <div className="w-1/2 relative">
-        <img
-          src="/Penguin.png" 
+        <Image
+          src="/Penguin.png"
           alt="img"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
       </div>
     </div>

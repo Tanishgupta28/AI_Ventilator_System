@@ -32,12 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
 
   Future<void> _login() async {
-  setState(() => _loading = true);
+    setState(() => _loading = true);
 
     final response = await http.post(
-      Uri.parse(
-        "http://172.16.78.101:3030/member/login",
-      ), // use 10.0.2.2 for Android emulator instead of localhost
+      Uri.parse("https://israel-5mizz.ondigitalocean.app/member/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": _emailController.text,
@@ -45,11 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }),
     );
 
-  setState(() => _loading = false);
+    setState(() => _loading = false);
+    print(response);
 
     final res = jsonDecode(response.body);
-    if (res["message"] ==
-        "Member registered and linked to patient successfully") {
+    print(res["message"]);
+    if (res["message"] == "Member login successful") {
       print(res);
 
       // save token if needed
@@ -68,8 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -143,10 +140,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchUserAudios() async {
-  setState(() => _loading = true);
+    setState(() => _loading = true);
 
     final response = await http.get(
-      Uri.parse("http://10.0.2.2:3000/member/${widget.userId}"),
+      Uri.parse(
+        "https://israel-5mizz.ondigitalocean.app/memvoice/member/${widget.userId}",
+      ),
     );
 
     setState(() => _loading = false);
@@ -164,8 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ).showSnackBar(const SnackBar(content: Text("Failed to load audios")));
     }
   }
-}
-
 
   Future<void> _startRecording() async {
     if (await _recorder.hasPermission()) {
@@ -188,33 +185,51 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _submitAudio() async {
-  if (_filePath == null) return;
+    if (_filePath == null) return;
 
-  setState(() => _loading = true);
+    setState(() => _loading = true);
 
     var request = http.MultipartRequest(
       "POST",
-      Uri.parse("http://10.0.2.2:3000/voice/${widget.userId}"),
+      Uri.parse(
+        "https://israel-5mizz.ondigitalocean.app/memvoice/voice/${widget.userId}",
+      ),
     );
-    request.files.add(await http.MultipartFile.fromPath("audio", _filePath!));
 
-  var response = await request.send();
-  setState(() => _loading = false);
+    // ✅ change "audio" → "voice" (must match backend)
+    request.files.add(await http.MultipartFile.fromPath("voice", _filePath!));
 
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Audio uploaded successfully")),
-      );
-      _filePath = null;
-      _fetchUserAudios();
-    } else {
+    try {
+      var response = await request.send();
+      setState(() => _loading = false);
+
+      if (response.statusCode == 201) {
+        final res = await http.Response.fromStream(response);
+        final data = jsonDecode(res.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data["message"] ?? "Audio uploaded successfully"),
+          ),
+        );
+
+        setState(() {
+          _filePath = null;
+        });
+
+        _fetchUserAudios(); // refresh list
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Upload failed")));
+      }
+    } catch (e) {
+      setState(() => _loading = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Upload failed")));
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
-}
-
 
   Future<void> _playAudio(
     String source,
@@ -271,7 +286,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final localAudioIndex = _userAudios.length;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Welcome ${widget.userId}")),
+      appBar: AppBar(
+        title: Text("Welcome ${widget.userId}"),
+        centerTitle: true,
+        elevation: 2,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -295,9 +314,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       index: localAudioIndex,
                       isLocal: true,
                       isPlaying: isPlaying,
-                      trailing: ElevatedButton(
+                      trailing: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                         onPressed: _submitAudio,
-                        child: const Text("Submit"),
+                        icon: const Icon(Icons.cloud_upload),
+                        label: const Text("Submit"),
                       ),
                     );
                   } else {
@@ -313,26 +339,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onLongPress: _startRecording,
-                  onLongPressUp: _stopRecording,
-                  child: ElevatedButton.icon(
-                    onPressed: null,
-                    icon: const Icon(Icons.mic),
-                    label: const Text("Hold to Record"),
+          ],
+        ),
+      ),
+
+      /// Action bar for recording & picking files
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 50),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onLongPress: _startRecording,
+                onLongPressUp: _stopRecording,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  onPressed: null, // handled by gesture
+                  icon: const Icon(Icons.mic, size: 26),
+                  label: const Text(
+                    "Hold to Record",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  onPressed: _pickFile,
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text("Pick File"),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
-              ],
+                onPressed: _pickFile,
+                icon: const Icon(Icons.upload_file, size: 26),
+                label: const Text(
+                  "Pick File",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ],
         ),

@@ -86,7 +86,7 @@ export default function PatientDetails() {
       </div>
 
       <div
-        className="max-h-[80vh] overflow-y-auto"
+        className="max-h-[30vh] overflow-y-auto"
         style={{ paddingBottom: `${length}px` }}
       >
         <NotifyBox
