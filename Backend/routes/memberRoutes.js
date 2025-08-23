@@ -8,6 +8,7 @@ import aws from "aws-sdk";
 import multer from "multer";
 import multerS3 from "multer-s3";
 import bcrypt from "bcrypt";
+import { generateToken } from "../utils/jwtFunct.js";
 
 dotenv.config();
 

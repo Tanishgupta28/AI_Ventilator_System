@@ -35,30 +35,39 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
 
   Future<void> _login() async {
-    setState(() => _loading = true);
+  setState(() => _loading = true);
 
-    // Dummy login request
-    final response =
-        await http.get(Uri.parse("http://localhost:3000/memvoice/member/68a86e3ea59ff9c595ea6718"));
+  final response = await http.post(
+    Uri.parse("http://10.0.2.2:3000/login"), // use 10.0.2.2 for Android emulator instead of localhost
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "email": _usernameController.text,
+      "password": _passwordController.text,
+    }),
+  );
 
-    setState(() => _loading = false);
+  setState(() => _loading = false);
 
-    if (response.statusCode == 200) {
-      final user = jsonDecode(response.body);
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(userId: user["id"].toString()),
-        ),
-      );
-    } else {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login failed")),
-      );
-    }
+  if (response.statusCode == 200) {
+    final res = jsonDecode(response.body);
+
+    // save token if needed
+    String token = res["data"]["token"];
+    String memberId = res["data"]["member"]["id"];
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(userId: memberId, token: token),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Invalid login")),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
 // ---------------- HOME SCREEN ----------------
 class HomeScreen extends StatefulWidget {
   final String userId;
-  const HomeScreen({super.key, required this.userId});
+  final String token;
+  const HomeScreen({super.key, required this.userId, required this.token});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -127,27 +137,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchUserAudios() async {
-    setState(() => _loading = true);
+  setState(() => _loading = true);
 
-    final response = await http.get(
-      Uri.parse(
-          "https://jsonplaceholder.typicode.com/albums/${widget.userId}/photos"),
+  final response = await http.get(
+    Uri.parse("http://10.0.2.2:3000/member/${widget.userId}"),
+  );
+
+  setState(() => _loading = false);
+
+  if (response.statusCode == 200) {
+    final res = jsonDecode(response.body);
+    final List audios = res["data"]["member"]["membervoice"];
+
+    setState(() {
+      _userAudios = audios.map((e) => e["url"].toString()).toList();
+    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to load audios")),
     );
-
-    setState(() => _loading = false);
-
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      setState(() {
-        _userAudios =
-            data.take(5).map((e) => e["url"].toString()).toList(); // fake URLs
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load audios")),
-      );
-    }
   }
+}
+
 
   Future<void> _startRecording() async {
     if (await _recorder.hasPermission()) {
@@ -170,32 +181,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _submitAudio() async {
-    if (_filePath == null) return;
+  if (_filePath == null) return;
 
-    setState(() => _loading = true);
+  setState(() => _loading = true);
 
-    var request = http.MultipartRequest(
-      "POST",
-      Uri.parse("http://localhost:3000/memvoice/voice/68a86e3ea59ff9c595ea6718"),
-    );
-    request.fields["userId"] = widget.userId;
-    request.files.add(await http.MultipartFile.fromPath("audio", _filePath!));
+  var request = http.MultipartRequest(
+    "POST",
+    Uri.parse("http://10.0.2.2:3000/voice/${widget.userId}"),
+  );
+  request.files.add(await http.MultipartFile.fromPath("audio", _filePath!));
 
-    var response = await request.send();
-    setState(() => _loading = false);
+  var response = await request.send();
+  setState(() => _loading = false);
 
-    if (response.statusCode == 200) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Audio uploaded successfully")));
-      _filePath = null;
-      _fetchUserAudios();
-    } else {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Upload failed")));
-    }
+  if (response.statusCode == 201) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Audio uploaded successfully")));
+    _filePath = null;
+    _fetchUserAudios();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Upload failed")));
   }
+}
+
 
   Future<void> _playAudio(String source, int index, {bool isLocal = false}) async {
     await _audioPlayer.stop();
