@@ -12,6 +12,7 @@ import aws from "aws-sdk";
 import multer from "multer";
 import multerS3 from "multer-s3";
 
+
 dotenv.config();
 
 const router = express.Router();
@@ -37,11 +38,11 @@ const upload = multer({
   }),
 }).single("image");
 
-
-router.post(
-  "/register",
-  (req, res) => {
-    upload(req, res, safeHandler(async (err) => {
+router.post("/register", (req, res) => {
+  upload(
+    req,
+    res,
+    safeHandler(async (err) => {
       if (err) return res.status(500).send({ error: err.message });
 
       try {
@@ -56,7 +57,7 @@ router.post(
           address,
           doctorEmail,
           nurseEmails,
-          image
+          image,
         } = req.body;
 
         const doctor = await Doctor.findOne({ email: doctorEmail });
@@ -124,10 +125,9 @@ router.post(
       } catch (error) {
         return res.status(500).send({ error: error.message });
       }
-    }));
-  }
-);
-
+    })
+  );
+});
 
 router.get(
   "/:patientId/notification/:notificationId",
@@ -188,18 +188,20 @@ router.get(
   })
 );
 
-router.post("/login",safeHandler(async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  "/login",
+  safeHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-  const patient = await Patient.findOne({ email });
-  if (!patient) {
-    return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
-  }
-  return res.success(200, "Login successful", {
-    patient: patient._id
-  });
-}));
-
+    const patient = await Patient.findOne({ email });
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+    return res.success(200, "Login successful", {
+      patient: patient._id,
+    });
+  })
+);
 
 router.delete(
   "/:patientId",
@@ -232,27 +234,33 @@ router.delete(
   })
 );
 
+router.post(
+  "/text",
+  safeHandler(async (req, res) => {
+    const { text } = req.body;
 
-router.post("/text", safeHandler(async (req, res) => {
-  const { text } = req.body;
+    if (!text) {
+      return res.error(400, "Text is required", "MISSING_TEXT");
+    }
 
-  if (!text) {
-    return res.error(400, "Text is required", "MISSING_TEXT");
-  }
+    const patientId = "68a863c3f556f33c55ce8ea4";
 
-  const patientId = "68a863c3f556f33c55ce8ea4";
+    const voiceDoc = await Voice.findOne({ patient: patientId, text });
 
-  const voiceDoc = await Voice.findOne({ patient: patientId, text });
+    if (!voiceDoc) {
+      return res.error(404, "Voice not found", "VOICE_NOT_FOUND");
+    }
 
-  if (!voiceDoc) {
-    return res.error(404, "Voice not found", "VOICE_NOT_FOUND");
-  }
+    const io = req.app.get("io");
+    io.emit("newVoiceUrl", {
+      voiceUrl: voiceDoc.voice,
+      text: text,
+    });
 
-  return res.success(200, "Voice URL fetched successfully", {
-    voiceUrl: voiceDoc.voice,
-  });
-}));
-
-
+    return res.success(200, "Voice URL fetched successfully", {
+      voiceUrl: voiceDoc.voice,
+    });
+  })
+);
 
 export default router;

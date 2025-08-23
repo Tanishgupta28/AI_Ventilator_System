@@ -3,15 +3,17 @@
 import { useRef, useState, useEffect } from "react";
 import { Play, Pause, Volume2 } from "lucide-react";
 
-export default function AudioPlayer({ src, width = 360, length = 10 }) {
+export default function AudioPlayer({ src, width = 360, length = 10, autoPlayOnNewUrl = false }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // Handle metadata + progress
   useEffect(() => {
     const audio = audioRef.current;
+    if (!audio) return;
 
     const updateProgress = () => {
       if (!audio.duration) return;
@@ -32,22 +34,41 @@ export default function AudioPlayer({ src, width = 360, length = 10 }) {
     };
   }, []);
 
+  // ✅ Auto play whenever a NEW url is passed in
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (autoPlayOnNewUrl && src) {
+      audio.load(); // reload new source
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.warn("Autoplay blocked by browser:", err);
+      });
+    } else {
+      // reset when no url
+      setIsPlaying(false);
+      setProgress(0);
+      setCurrentTime(0);
+      setDuration(0);
+    }
+  }, [src, autoPlayOnNewUrl]);
+
   const togglePlay = () => {
     const audio = audioRef.current;
+    if (!audio) return;
     if (isPlaying) {
       audio.pause();
+      setIsPlaying(false);
     } else {
       audio.play();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const formatTime = (time) => {
     if (!time || isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60)
-      .toString()
-      .padStart(2, "0");
+    const seconds = Math.floor(time % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
   };
 
@@ -61,6 +82,7 @@ export default function AudioPlayer({ src, width = 360, length = 10 }) {
       >
         {isPlaying ? <Pause size={18} /> : <Play size={18} />}
       </button>
+
       <div className="flex-1 flex space-x-1 h-8 items-end">
         {Array.from({ length: length }).map((_, i) => (
           <div
@@ -72,11 +94,15 @@ export default function AudioPlayer({ src, width = 360, length = 10 }) {
           />
         ))}
       </div>
+
       <span className="text-xs text-gray-700 w-16 text-right">
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
       <Volume2 size={18} className="text-gray-700" />
+
+      {/* Actual audio element */}
       <audio ref={audioRef} src={src} preload="metadata" />
+
       <style jsx>{`
         @keyframes wave {
           0%,
