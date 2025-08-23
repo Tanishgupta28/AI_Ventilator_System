@@ -1,8 +1,6 @@
 import AudioPlayer from "./Audio";
 
 const VoiceNote = ({ url, text }) => {
-  console.log("VoiceNote rendered with URL:", url);
-
   // Normalize URL
   const audioUrl = url?.startsWith("http") ? url : `https://${url}`;
 
