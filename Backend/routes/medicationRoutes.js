@@ -2,6 +2,7 @@ import express from "express";
 import safeHandler from "../middlewares/safeHandler.js";
 import Patient from "../models/patient.js";
 import Medication from "../models/medication.js";
+import { scheduleMedicationJob } from "../middlewares/agenda.js";
 
 const router = express.Router();
 
@@ -29,6 +30,10 @@ router.post(
 
     patient.medication.push(newMedication._id);
     await patient.save();
+
+    const newMed= await Medication.findById(newMedication._id).populate("patient");
+
+     await scheduleMedicationJob(newMed);
 
     return res.success(
       201,

@@ -23,19 +23,32 @@ export default function PatientDetails() {
   const router = useRouter();
   const [data, setData] = useState({});
   const [length, setLength] = useState(0);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     async function fetchPatientDetails() {
       try {
         const response = await axios.get(`${url}/patient/${patientId}`);
-        console.log(response.data.data);
         setData(response.data.data);
+
+        const memRes=await axios.get(`${url}/member/${patientId}`);
+        setMembers(memRes.data.data.members || []);
       } catch (err) {
         console.error("Error fetching patient details:", err);
       }
     }
     fetchPatientDetails();
   }, [patientId]);
+
+  const handleMemberSubmit = async (newMember) => {
+    try {
+      const response = await axios.post(`${url}/member/register/${patientId}`, newMember);
+      console.log("Member added:", response.data);
+      setMembers((prevMembers) => [...prevMembers, response.data]);
+    } catch (err) {
+      console.error("Error adding member:", err);
+    }
+  };
 
   return (
     <div className="p-6 flex-1 flex flex-col gap-6 h-screen overflow-y-auto ml-40">
@@ -52,17 +65,9 @@ export default function PatientDetails() {
           iw={100}
           namesize="text-3xl"
           agesize="text-xl"
+          image={data?.image}
         />
-        <Member
-          members={[
-            { name: "Alice Johnson", role: "Doctor" },
-            { name: "Bob Smith", role: "Nurse" },
-            { name: "Charlie Brown", role: "Patient" },
-          ]}
-          onSubmit={(newMember) => {
-            console.log("Send to backend:", newMember);
-          }}
-        />
+        <Member members={members} onSubmit={handleMemberSubmit} id={id} />
       </div>
     </div>
   );

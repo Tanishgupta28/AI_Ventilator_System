@@ -92,6 +92,7 @@ export default function PatientDetails() {
           iw={100}
           namesize="text-3xl"
           agesize="text-xl"
+          image={data?.image}
         />
         <Medication schedules={medications} onSubmit={handleMedicationSubmit} />
       </div>
