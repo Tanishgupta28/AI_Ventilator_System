@@ -176,7 +176,10 @@ router.post(
   safeHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const member = await Member.findOne({ email });
+    const member = await Member.findOne({ email })
+      .populate("patient", "fullname email")  
+      .exec();
+
     if (!member) {
       return res.error(404, "Invalid email or password", "INVALID_CREDENTIALS");
     }
@@ -194,7 +197,14 @@ router.post(
         id: member._id,
         email: member.email,
         role: member.role,
+        fullname: member.fullname,
       },
+      patient: member.patient
+        ? {
+            id: member.patient._id,
+            fullname: member.patient.fullname, 
+          }
+        : null,
     });
   })
 );
