@@ -67,7 +67,7 @@ router.get(
     }
 
     const patients = await Patient.find({ doctor: doctorId })
-      .select("fullname dob assigned_bed newNotification oldNotification") // only fetch needed fields
+      .select("fullname dob assigned_bed newNotification oldNotification") 
       .populate("newNotification")
       .populate("oldNotification");
 

@@ -5,11 +5,13 @@ import Doctor from "../models/doctor.js";
 import Nurse from "../models/nurse.js";
 import Notification from "../models/notification.js";
 import Image from "../models/image.js";
+import Voice from "../models/voice.js";
 
 import dotenv from "dotenv";
 import aws from "aws-sdk";
 import multer from "multer";
 import multerS3 from "multer-s3";
+
 
 dotenv.config();
 
@@ -36,11 +38,11 @@ const upload = multer({
   }),
 }).single("image");
 
-
-router.post(
-  "/register",
-  (req, res) => {
-    upload(req, res, safeHandler(async (err) => {
+router.post("/register", (req, res) => {
+  upload(
+    req,
+    res,
+    safeHandler(async (err) => {
       if (err) return res.status(500).send({ error: err.message });
 
       try {
@@ -55,7 +57,7 @@ router.post(
           address,
           doctorEmail,
           nurseEmails,
-          image
+          image,
         } = req.body;
 
         const doctor = await Doctor.findOne({ email: doctorEmail });
@@ -123,10 +125,9 @@ router.post(
       } catch (error) {
         return res.status(500).send({ error: error.message });
       }
-    }));
-  }
-);
-
+    })
+  );
+});
 
 router.get(
   "/:patientId/notification/:notificationId",
@@ -187,17 +188,20 @@ router.get(
   })
 );
 
-router.post("/login",safeHandler(async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  "/login",
+  safeHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-  const patient = await Patient.findOne({ email });
-  if (!patient) {
-    return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
-  }
-
-  const token = patient.generateAuthToken();
-  return res.success(200, "Login successful", { token });
-}));
+    const patient = await Patient.findOne({ email });
+    if (!patient) {
+      return res.error(404, "Patient not found", "PATIENT_NOT_FOUND");
+    }
+    return res.success(200, "Login successful", {
+      patient: patient._id,
+    });
+  })
+);
 
 router.delete(
   "/:patientId",
@@ -227,6 +231,37 @@ router.delete(
     await Patient.findByIdAndDelete(patientId);
 
     return res.success(200, "Patient and related details deleted successfully");
+  })
+);
+
+router.post(
+  "/text",
+  safeHandler(async (req, res) => {
+    const { text } = req.body;
+    console.log("Received text:", text);
+
+    if (!text) {
+      return res.error(400, "Text is required", "MISSING_TEXT");
+    }
+
+    const patientId = "68a86110f556f33c55ce8e8b";
+
+    const voiceDoc = await Voice.findOne({ patient: patientId, text });
+
+    if (!voiceDoc) {
+      return res.error(404, "Voice not found", "VOICE_NOT_FOUND");
+    }
+    console.log("Voice document found:", voiceDoc);
+
+    const io = req.app.get("io");
+    io.emit("newVoiceUrl", {
+      voiceUrl: voiceDoc.voice,
+      text: text,
+    });
+
+    return res.success(200, "Voice URL fetched successfully", {
+      voiceUrl: voiceDoc.voice,
+    });
   })
 );
 

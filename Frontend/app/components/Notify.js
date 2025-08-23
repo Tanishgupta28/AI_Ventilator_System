@@ -5,6 +5,7 @@ import axios from "axios";
 import { url } from "@/url";
 
 export default function Notify({ notifications, isVoice = false }) {
+
   return (
     <nav
       className="w-64 h-screen bg-gray-900 text-white flex flex-col p-4 
@@ -19,13 +20,9 @@ export default function Notify({ notifications, isVoice = false }) {
           notifications.map((note, index) =>
             isVoice ? (
               <VoiceNote
-                key={index}
-                color={note.color}
-                message={note.message}
-                patientId={note.patientId}
-                patientName={note.patientName}
-                bed={note.bed}
-                time={note.time}
+                key={note.id}
+                url={note.url}
+                text={note.text}
               />
             ) : (
               <Directive
