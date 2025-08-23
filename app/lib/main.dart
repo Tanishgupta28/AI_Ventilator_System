@@ -14,10 +14,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Voice Upload App',
-      home: LoginScreen(),
-    );
+    return MaterialApp(title: 'Voice Upload App', home: LoginScreen());
   }
 }
 
@@ -30,41 +27,46 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
 
   Future<void> _login() async {
   setState(() => _loading = true);
 
-  final response = await http.post(
-    Uri.parse("http://10.0.2.2:3000/login"), // use 10.0.2.2 for Android emulator instead of localhost
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      "email": _usernameController.text,
-      "password": _passwordController.text,
-    }),
-  );
+    final response = await http.post(
+      Uri.parse(
+        "http://172.16.78.101:3030/member/login",
+      ), // use 10.0.2.2 for Android emulator instead of localhost
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": _emailController.text,
+        "password": _passwordController.text,
+      }),
+    );
 
   setState(() => _loading = false);
 
-  if (response.statusCode == 200) {
     final res = jsonDecode(response.body);
+    if (res["message"] ==
+        "Member registered and linked to patient successfully") {
+      print(res);
 
-    // save token if needed
-    String token = res["data"]["token"];
-    String memberId = res["data"]["member"]["id"];
+      // save token if needed
+      String token = res["data"]["token"];
+      String memberId = res["data"]["member"]["id"];
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(userId: memberId, token: token),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Invalid login")),
-    );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(userId: memberId, token: token),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res["message"] ?? "Invalid login")),
+      );
+    }
   }
 }
 
@@ -75,19 +77,23 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(title: const Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: "Username")),
-          TextField(
+        child: Column(
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: "Password")),
-          const SizedBox(height: 20),
-          _loading
-              ? const CircularProgressIndicator()
-              : ElevatedButton(onPressed: _login, child: const Text("Login")),
-        ]),
+              decoration: const InputDecoration(labelText: "Password"),
+            ),
+            const SizedBox(height: 20),
+            _loading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(onPressed: _login, child: const Text("Login")),
+          ],
+        ),
       ),
     );
   }
@@ -139,23 +145,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchUserAudios() async {
   setState(() => _loading = true);
 
-  final response = await http.get(
-    Uri.parse("http://10.0.2.2:3000/member/${widget.userId}"),
-  );
-
-  setState(() => _loading = false);
-
-  if (response.statusCode == 200) {
-    final res = jsonDecode(response.body);
-    final List audios = res["data"]["member"]["membervoice"];
-
-    setState(() {
-      _userAudios = audios.map((e) => e["url"].toString()).toList();
-    });
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Failed to load audios")),
+    final response = await http.get(
+      Uri.parse("http://10.0.2.2:3000/member/${widget.userId}"),
     );
+
+    setState(() => _loading = false);
+
+    if (response.statusCode == 200) {
+      final res = jsonDecode(response.body);
+      final List audios = res["data"]["member"]["membervoice"];
+
+      setState(() {
+        _userAudios = audios.map((e) => e["url"].toString()).toList();
+      });
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to load audios")));
+    }
   }
 }
 
@@ -185,28 +192,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   setState(() => _loading = true);
 
-  var request = http.MultipartRequest(
-    "POST",
-    Uri.parse("http://10.0.2.2:3000/voice/${widget.userId}"),
-  );
-  request.files.add(await http.MultipartFile.fromPath("audio", _filePath!));
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("http://10.0.2.2:3000/voice/${widget.userId}"),
+    );
+    request.files.add(await http.MultipartFile.fromPath("audio", _filePath!));
 
   var response = await request.send();
   setState(() => _loading = false);
 
-  if (response.statusCode == 201) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Audio uploaded successfully")));
-    _filePath = null;
-    _fetchUserAudios();
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Upload failed")));
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Audio uploaded successfully")),
+      );
+      _filePath = null;
+      _fetchUserAudios();
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Upload failed")));
+    }
   }
 }
 
 
-  Future<void> _playAudio(String source, int index, {bool isLocal = false}) async {
+  Future<void> _playAudio(
+    String source,
+    int index, {
+    bool isLocal = false,
+  }) async {
     await _audioPlayer.stop();
     if (isLocal) {
       await _audioPlayer.play(DeviceFileSource(source));
@@ -262,8 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Text("Your Audios:",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Your Audios:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             _loading ? const LinearProgressIndicator() : const SizedBox(),
             Expanded(
               child: ListView.builder(
@@ -358,7 +374,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           title: Text(title),
           subtitle: Text(subtitle),
-          trailing: trailing ??
+          trailing:
+              trailing ??
               (isCurrent
                   ? IconButton(
                       icon: const Icon(Icons.stop),
@@ -372,7 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Slider(
                 min: 0,
                 max: _duration.inSeconds.toDouble(),
-                value: _position.inSeconds.clamp(0, _duration.inSeconds).toDouble(),
+                value: _position.inSeconds
+                    .clamp(0, _duration.inSeconds)
+                    .toDouble(),
                 onChanged: (value) async {
                   final newPosition = Duration(seconds: value.toInt());
                   await _audioPlayer.seek(newPosition);
