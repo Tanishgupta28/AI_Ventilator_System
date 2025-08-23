@@ -38,7 +38,7 @@ export default function PatientDetails() {
   }, [patientId, notificationId]);
 
   return (
-    <div className="p-6 ml-48 flex flex-col gap-7">
+    <div className="p-6 ml-40 flex flex-col gap-7">
       <Profile
         name={data?.name}
         age={data?.dob}

@@ -32,14 +32,14 @@ export default function RealTime({
   const chartData = data.map((d, i) => ({ time: i, value: d }));
 
   return (
-    <div className="w-[220px] h-[250px] bg-white rounded-2xl shadow-lg p-4 flex flex-col justify-between border border-gray-200">
+    <div className="w-[200px] h-[220px] bg-white rounded-2xl shadow-lg p-4 flex flex-col justify-between border border-gray-200">
       <div className="flex items-start gap-6">
         <div className="flex flex-col items-center">
           {/* ICON WITH CUSTOM BG */}
-          <div className={`flex items-center justify-center w-16 h-16 ${iconBg} rounded-full`}>
+          <div className={`flex items-center justify-center w-14 h-14 ${iconBg} rounded-full`}>
             <Image src={icon} alt="Icon" width={35} height={35} />
           </div>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+          <p className="text-xl font-bold text-gray-900 mt-2">{value}</p>
           {status && (
             <span
               className={`mt-1 px-2 py-0.5 rounded-md text-xs font-bold ${statusColor}`}
