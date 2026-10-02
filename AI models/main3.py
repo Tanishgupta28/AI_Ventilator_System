@@ -1,3 +1,4 @@
+import os
 import cv2
 import mediapipe as mp
 import pyautogui
@@ -8,7 +9,7 @@ import math
 facemesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
 
 # Open camera
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(int(os.environ.get("AI_CAMERA_INDEX", "0")))
 screen_w, screen_h = pyautogui.size()
 
 if not cam.isOpened():

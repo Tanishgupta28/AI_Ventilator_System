@@ -1,0 +1,6 @@
+# Local Python environments and generated files
+.venv/
+.venv-emotion/
+__pycache__/
+*.py[cod]
+.env

@@ -31,3 +31,6 @@ Project Delta is an AI-powered healthcare platform designed to assist patients o
 ---
 
 ## Project Structure
+
+For Python setup, dependency checks, and webcam demo commands, see
+[the AI module guide](AI%20models/README.md).

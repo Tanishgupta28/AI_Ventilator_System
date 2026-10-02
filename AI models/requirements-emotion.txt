@@ -1,0 +1,7 @@
+# Separate environment: DeepFace depends on opencv-python.
+numpy==1.26.4
+opencv-python==4.11.0.86
+deepface==0.0.93
+tensorflow==2.15.1
+keras==2.15.0
+requests==2.32.3
