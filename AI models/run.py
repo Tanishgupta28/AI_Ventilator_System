@@ -7,6 +7,8 @@ from pathlib import Path
 import runpy
 import sys
 
+from gaze.config import DEFAULT_SETTINGS
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -22,6 +24,8 @@ def main():
     parser.add_argument("--calibration-samples", type=int, default=30, help="Valid samples per calibration target (minimum 5)")
     parser.add_argument("--dead-zone", type=float, default=0.01, help="Central normalized half-width; 0 disables (default 0.01)")
     parser.add_argument("--blink-threshold", type=float, default=0.012, help="Normalized eyelid gap classified as closed (default 0.012); validate manually")
+    parser.add_argument("--double-blink-window", type=float, default=DEFAULT_SETTINGS.double_blink_seconds, help="Maximum completed-blink interval in seconds (default 0.65)")
+    parser.add_argument("--intent-diagnostics", action="store_true", help="Dry-run only: print monotonic blink/selection events")
     args = parser.parse_args()
     supported = ((3, 11),) if args.mode == "emotion" else ((3, 11), (3, 12))
     if sys.version_info[:2] not in supported:
@@ -29,8 +33,9 @@ def main():
     if args.dry_run and (args.mode != "gaze" or args.max_frames < 1):
         parser.error("--dry-run requires gaze mode and a positive --max-frames")
     if (args.calibration or args.calibrate or args.calibration_samples != 30
-            or args.dead_zone != 0.01 or args.blink_threshold != 0.012) and args.mode != "gaze":
-        parser.error("Calibration and dead-zone options require gaze mode")
+            or args.dead_zone != 0.01 or args.blink_threshold != 0.012
+            or args.double_blink_window != DEFAULT_SETTINGS.double_blink_seconds or args.intent_diagnostics) and args.mode != "gaze":
+        parser.error("Calibration, stability and blink options require gaze mode")
     if args.calibrate and (args.dry_run or args.check):
         parser.error("--calibrate needs the interactive target window; mouse actions are always disabled")
     if args.calibration_samples < 5:
@@ -39,6 +44,10 @@ def main():
         parser.error("--dead-zone must be finite and in [0, 0.5)")
     if not math.isfinite(args.blink_threshold) or not 0 < args.blink_threshold < 1:
         parser.error("--blink-threshold must be finite and in (0, 1)")
+    if not math.isfinite(args.double_blink_window) or args.double_blink_window <= 0:
+        parser.error("--double-blink-window must be finite and positive")
+    if args.intent_diagnostics and not args.dry_run:
+        parser.error("--intent-diagnostics requires --dry-run")
     if args.camera < 0:
         parser.error("--camera must be nonnegative")
     if args.backend_url and args.mode != "emotion":
@@ -54,6 +63,8 @@ def main():
     os.environ["AI_CALIBRATION_SAMPLES"] = str(args.calibration_samples)
     os.environ["AI_DEAD_ZONE"] = str(args.dead_zone)
     os.environ["AI_BLINK_THRESHOLD"] = str(args.blink_threshold)
+    os.environ["AI_DOUBLE_BLINK_WINDOW"] = str(args.double_blink_window)
+    os.environ["AI_INTENT_DIAGNOSTICS"] = "1" if args.intent_diagnostics else "0"
     if args.check:
         modules = ("cv2", "numpy", "deepface", "requests") if args.mode == "emotion" else ("cv2", "numpy", "mediapipe", "pyautogui", "requests")
         try:

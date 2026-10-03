@@ -48,6 +48,7 @@ class CalibrationProfile:
                 raise ValueError("Calibration gaze range is too small")
 
     def map(self, sample):
+        """Screen-normalized coordinates: stored center is (0.5, 0.5), not (0, 0)."""
         if not valid_sample(sample):
             raise ValueError("Invalid gaze sample")
         return tuple(map_axis(value, center, negative, positive)

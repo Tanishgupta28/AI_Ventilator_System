@@ -2,6 +2,7 @@
 import os
 
 from gaze.app import run
+from gaze.config import DEFAULT_SETTINGS
 
 
 def main():
@@ -14,6 +15,8 @@ def main():
         calibration_samples=int(os.environ.get("AI_CALIBRATION_SAMPLES", "30")),
         dead_zone=float(os.environ.get("AI_DEAD_ZONE", "0.01")),
         blink_threshold=float(os.environ.get("AI_BLINK_THRESHOLD", "0.012")),
+        double_blink_window=float(os.environ.get("AI_DOUBLE_BLINK_WINDOW", str(DEFAULT_SETTINGS.double_blink_seconds))),
+        intent_diagnostics=os.environ.get("AI_INTENT_DIAGNOSTICS") == "1",
     )
 
 

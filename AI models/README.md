@@ -177,7 +177,7 @@ no events while closed; closures over 0.8 seconds are discarded on reopening.
 These conservative timing defaults reduce sampled-frame noise/prolonged-closure
 selection; they are configurable in `GazeSettings` and are not clinically tuned.
 
-Two completed blinks within **0.5 seconds** form one click intent. The pair is
+Two completed blinks within **0.65 seconds** form one click intent (Stage 3.6 default). The pair is
 consumed once. A **0.3-second** nonblocking monotonic cooldown suppresses rapid
 selection events without freezing capture or queuing a delayed retry. Movement
 alone never generates a click. Movement, snapping, and clicking are suppressed
@@ -274,6 +274,76 @@ Double-blink selection reliability, center calibration repeatability and trackin
 robustness remain unresolved. These are qualitative results from one session,
 not accuracy estimates or evidence of clinical validation. Personal profiles and
 signal measurements are not committed.
+
+### Stage 3.6 center and double-blink investigation
+
+Calibration mapping keeps the stored center at `(0.5, 0.5)` in the pipeline's
+normalized screen representation. Signed neutral gaze is `2 * mapped - 1`, hence
+`(0, 0)`. Each axis uses the same existing equations:
+
+- Toward the negative target: `0.5 - 0.5 * (value-center)/(negative-center)`.
+- Toward the positive target: `0.5 + 0.5 * (value-center)/(positive-center)`.
+
+These preserve asymmetric ranges and reversed axes. No center equation was
+changed. The dead zone preserves center, and both exponential filters converge
+there; a previously displaced cursor/filter may take several frames to settle.
+The Stage 3.5 center result was already displaced before filtering, consistent
+with a different raw measurement from the stored calibration center. Within-session
+center readings also varied during Stage 3.6. This does not establish whether
+head posture, pixel rounding, landmark variability or user eye positioning caused
+that variation. Repeat calibration at a stable head position rather than adding
+an arbitrary screen offset.
+
+Ten new prompted double-blink attempts at the original 0.5-second window each
+produced two completed events. Eight selected; the two rejected intervals were
+0.531 and 0.625 seconds. Neither cooldown nor tracking loss rejected those trials.
+The new **0.65-second** default is a small increase supported by these measurements;
+the **0.012 eye-closure threshold**, blink classifier, smoothing and cooldown are
+unchanged. A larger pairing window can join unrelated blinks, so further human
+false-selection testing remains necessary. The original Stage 3.5 misses cannot
+be individually diagnosed because their timestamps were not recorded.
+
+The follow-up 0.65-second live test selected in nine of ten prompted trials.
+All nine detected pairs were accepted. The remaining trial registered one
+continuous closure of about 0.797 seconds, rather than two completed blink events;
+no cooldown or tracking reset interrupted any trial. Its physical cause cannot be
+inferred from event logs. Follow-up pair intervals were all at most 0.5 seconds,
+so this separate live run does not isolate the benefit of the timing change.
+Both human timing sessions had zero tracking-loss frames and zero actual mouse
+calls, running at approximately 30 FPS.
+
+Real center checks with the existing profile remained vertically offset. Two
+fresh five-target calibration attempts were rejected by existing validation;
+in the measured retry, DOWN had exactly the same vertical median as CENTER.
+No invalid profile replaced the original, and no arbitrary mapping offset was
+introduced. A repeatable head position and distinguishable calibration samples
+are still needed; center stability is an unresolved prototype limitation.
+Calibration collection and eye geometry were not redesigned in this stage.
+
+Verification: 47 deterministic tests passed (36 existing tests, retaining explicit
+0.5-second legacy timing cases, plus 11 new tests). Syntax, CLI/help and invalid
+options, dependency imports and diff checks passed. The two human sessions
+processed 3,978 valid tracking frames. Subsequent 120-frame bounded app probes
+opened the camera and exited cleanly with all desktop actions guarded; however,
+no usable landmarks or gaze updates were obtained. An instrumented final probe
+confirmed zero MediaPipe face results despite valid camera reads. Camera release
+and exactly one MediaPipe close were checked. This validates safe loss handling
+and cleanup, not successful gaze inference for those final app probes. It does
+not explain the earlier transient; no tracking redesign was made.
+
+Override the interval and inspect lightweight monotonic events in safe mode:
+
+```powershell
+.\.venv\Scripts\python.exe "AI models/run.py" gaze --dry-run --max-frames 300 --double-blink-window 0.65 --intent-diagnostics
+```
+
+Diagnostics report closure starts, reopening/duration rejection, completed events,
+first-event storage, interval expiry, received-event intervals, accepted pairs,
+selection/cooldown outcomes and tracking resets. Output is optional and restricted
+to dry runs through the CLI. Expiry compares timestamps against the first event's
+deadline, retaining an inclusive interval boundary. No images or landmark arrays
+are logged. Existing Stage 3.5 loss records combine invalid reads, absent faces and
+invalid geometry, so that transient's root cause remains unresolved.
 
 ## Emotion detection
 

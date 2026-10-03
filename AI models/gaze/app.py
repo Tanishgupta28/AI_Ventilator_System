@@ -50,14 +50,20 @@ def reset_tracking(estimator, interaction):
 
 
 def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
-        calibrate_path=None, calibration_samples=30, dead_zone=0.01, blink_threshold=0.012):
+        calibrate_path=None, calibration_samples=30, dead_zone=0.01, blink_threshold=0.012,
+        double_blink_window=DEFAULT_SETTINGS.double_blink_seconds, intent_diagnostics=False):
     if type(camera_index) is not int or camera_index < 0:
         raise ValueError("Camera index must be a nonnegative integer")
     if dry_run and (type(max_frames) is not int or max_frames < 1):
         raise ValueError("A bounded dry run requires a positive frame count")
     if not math.isfinite(blink_threshold) or not 0 < blink_threshold < 1:
         raise ValueError("Blink threshold must be finite and in (0, 1)")
-    settings = replace(DEFAULT_SETTINGS, dead_zone=dead_zone, blink_threshold=blink_threshold)
+    if not math.isfinite(double_blink_window) or double_blink_window <= 0:
+        raise ValueError("Double-blink window must be finite and positive")
+    if intent_diagnostics and not dry_run:
+        raise ValueError("Intent diagnostics require dry-run mode")
+    settings = replace(DEFAULT_SETTINGS, dead_zone=dead_zone, blink_threshold=blink_threshold,
+                       double_blink_seconds=double_blink_window)
     apply_dead_zone((0.5, 0.5), dead_zone)  # Validate before acquiring resources.
     metrics = RuntimeMetrics()
     profile = load_profile(calibration_path) if calibration_path else None
@@ -65,7 +71,10 @@ def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
         print('Calibration missing/invalid; using fixed sensitivity fallback')
     print('Gaze mapping: ' + ('calibrated' if profile else 'fixed sensitivity fallback'))
     estimator = GazeEstimator(settings, profile)
-    interaction = InteractionController(pyautogui, buttons, dry_run or bool(calibrate_path), settings)
+    def log_intent(event):
+        print('Intent diagnostics: ' + json.dumps(event, sort_keys=True))
+    interaction = InteractionController(pyautogui, buttons, dry_run or bool(calibrate_path), settings,
+                                        log_intent if intent_diagnostics else None)
     session = CalibrationSession(calibration_samples) if calibrate_path else None
     failed = False
     consecutive_invalid = 0

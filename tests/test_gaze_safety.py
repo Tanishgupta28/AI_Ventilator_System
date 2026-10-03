@@ -172,7 +172,7 @@ class BlinkTests(unittest.TestCase):
             self.assertEqual(detector.update(False, 1 + duration + 0.0625), accepted)
 
     def test_double_blink_pair_is_consumed_once_and_expires(self):
-        intent = DoubleBlinkIntent()
+        intent = DoubleBlinkIntent(interval=0.5)
         self.assertFalse(intent.update(True, 10))
         self.assertTrue(intent.update(True, 10.5))
         self.assertFalse(intent.update(False, 10.6))

@@ -98,7 +98,7 @@ class GestureStateTests(unittest.TestCase):
         self.assertTrue(state.update(False, 10.57))
 
     def test_half_second_blink_gap_resets_counter(self):
-        state = DoubleBlinkIntent()
+        state = DoubleBlinkIntent(interval=0.5)
         self.assertFalse(state.update(True, 10))
         self.assertFalse(state.update(True, 10.6))
         self.assertTrue(state.update(True, 10.9))

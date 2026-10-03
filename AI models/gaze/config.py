@@ -27,7 +27,7 @@ class GazeSettings:
     blink_min_closed_seconds: float = 0.06
     blink_max_closed_seconds: float = 0.8
     blink_reopen_seconds: float = 0.06
-    double_blink_seconds: float = 0.5
+    double_blink_seconds: float = 0.65
     click_debounce_seconds: float = 0.3
     snap_hold_seconds: float = 5
     dead_zone: float = 0.01
