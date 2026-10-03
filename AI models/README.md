@@ -476,6 +476,52 @@ Both 250 ms timing defaults remain provisional. Real mouse actions and networkin
 were disabled during validation. This checkpoint preserves verified engineering
 improvements rather than claiming that the interface is usable.
 
+## Stage 4.8 calibration research checkpoint
+
+Calibration schema validity does not establish useful signal separation. The
+research tools report median, standard deviation, median absolute deviation,
+sample diversity, and directional separation divided by combined within-target
+spread. Spread is the larger of standard deviation and scaled MAD; a ratio below
+2 triggers an engineering LOW warning. It is not clinical confidence, and does
+not reject or delete an existing profile.
+
+Collect an experimental grid into a separate, ignored file:
+
+```powershell
+.\.venv\Scripts\python.exe "AI models/run.py" communication --calibrate-grid calibration/grid-run1.json
+```
+
+Collect a second file independently to assess repeatability. All nine points use
+30 valid open-eye float-geometry samples. Space starts each point; Q/Escape
+cancels. Collection does not import PyAutoGUI or send network requests, refuses
+to overwrite an existing collection, and releases camera/model/window resources.
+Personal profiles, measurements, and generated evaluations under `calibration/`
+remain Git-ignored.
+
+`gaze.grid_calibration` exposes `load_grid`, `compare_mappings` and `compare_runs`.
+The first two thirds of each target's samples train the models; the final third
+is held out. NumPy least squares fits a coupled 2D affine mapping with degeneracy
+checks. The comparison includes the original piecewise equation fitted to the
+five grid cross targets, accounting for their known canvas anchors. An existing
+saved five-point profile can also be supplied as a separate baseline. Predictions
+are evaluated without clamping/smoothing so extrapolation is visible. Reports
+include median/mean/p90 pixel error, horizontal/vertical mean absolute error, and
+button-region matches; the middle-column dots are gaps and are excluded from
+button-match denominators. Independent-run comparison additionally reports all
+nine median drifts, transfer errors in both directions, and observed center/bottom
+range overlap. These are prototype engineering measurements, not clinical accuracy.
+
+Human research collected all nine points twice. The affine candidate improved
+some errors and button-region matches, but not consistently across points/runs.
+Run 2 yielded 49/60 held-out button matches, including only 1/10 for PAIN; eight
+PAIN samples mapped to ADJUST POSITION. CENTER vertical median drift between runs
+was about 0.0138. Bottom separation was marginal in one run, and TOP-RIGHT versus
+MIDDLE-RIGHT strongly overlapped in that run. The live five-point mapper was
+retained; gaze-only and selection trials were not advanced. Six-button direct-gaze
+usability remains unresolved. The research checkpoint passes 119 deterministic
+tests, including three additional regressions preserving repeatability/overlap
+analysis. No successful communication-usability claim follows from these tests.
+
 ## Emotion detection
 
 Use a separate environment to avoid installing two OpenCV distributions:

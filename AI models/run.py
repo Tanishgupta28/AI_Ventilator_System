@@ -21,6 +21,7 @@ def main():
     calibration = parser.add_mutually_exclusive_group()
     calibration.add_argument("--calibration", help="Optional saved gaze calibration JSON")
     calibration.add_argument("--calibrate", help="Collect five targets and save a gaze calibration JSON; mouse actions disabled")
+    calibration.add_argument("--calibrate-grid", help="Experimental 3x3 sample collection; separate output file, no mouse actions")
     parser.add_argument("--calibration-samples", type=int, default=30, help="Valid samples per calibration target (minimum 5)")
     parser.add_argument("--dead-zone", type=float, default=0.01, help="Central normalized half-width; 0 disables (default 0.01)")
     parser.add_argument("--blink-threshold", type=float, default=0.012, help="Normalized eyelid gap classified as closed (default 0.012); validate manually")
@@ -44,6 +45,10 @@ def main():
             or args.dead_zone != 0.01 or args.blink_threshold != 0.012
             or args.double_blink_window != DEFAULT_SETTINGS.double_blink_seconds or args.intent_diagnostics) and args.mode not in ("gaze", "communication"):
         parser.error("Calibration, stability and blink options require gaze/communication mode")
+    if args.calibrate_grid and (args.mode not in ("gaze", "communication") or args.dry_run or args.check):
+        parser.error("--calibrate-grid requires interactive gaze/communication mode")
+    if args.calibrate_grid and args.calibration_samples < 9:
+        parser.error("Grid collection requires at least nine samples per point")
     if args.calibrate and args.mode == "communication":
         parser.error("Create a profile using gaze --calibrate, then load it with communication --calibration")
     if args.calibrate and (args.dry_run or args.check):
@@ -89,6 +94,10 @@ def main():
             parser.exit(1, f"Dependency check failed: {exc}\nInstall the requirements for this mode.\n")
         print("Dependency check passed; camera, display windows and inference were not started.")
         return
+    if args.calibrate_grid:
+        from gaze.grid_app import run
+        raise SystemExit(run(args.calibrate_grid, camera_index=args.camera,
+                             samples_per_target=args.calibration_samples))
     if args.mode == "communication":
         from gaze.communication_app import run
         raise SystemExit(run(camera_index=args.camera, dry_run=args.dry_run, max_frames=args.max_frames,
