@@ -37,6 +37,8 @@ def main():
             imported = {name: importlib.import_module(name) for name in modules}
             if args.mode != "emotion":
                 imported["mediapipe"].solutions.face_mesh.FaceMesh
+            if args.mode == "gaze":
+                importlib.import_module("gaze.app")
         except (ImportError, AttributeError, OSError) as exc:
             parser.exit(1, f"Dependency check failed: {exc}\nInstall the requirements for this mode.\n")
         print("Dependency check passed; camera, display windows and inference were not started.")
