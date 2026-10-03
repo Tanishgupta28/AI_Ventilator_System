@@ -247,6 +247,34 @@ confirmed. No personal calibration file was generated or committed. Five-target
 collection/median mapping and sustained-closure semantics were validated with
 synthetic deterministic inputs, not fabricated human participation.
 
+### Stage 3.5 human validation
+
+One participant completed real webcam calibration with 30 valid samples for each
+of CENTER, LEFT, RIGHT, UP and DOWN. The saved personal profile validated and
+loaded successfully; it remains in the Git-ignored calibration directory.
+
+The measured open-eye and sustained closed-eye signal ranges separated around
+the existing `0.012` threshold, so no threshold or algorithm change was justified.
+All ten prompted single blinks produced one completed blink each. Four of five
+double-blink trials produced two completed blinks, but only two trials produced
+a selection intent. No unexpected selection intents were observed. These counts
+use participant-confirmed prompts, not independently annotated video ground truth.
+
+A sustained closure with 60 closed frames produced zero completed blink events
+and zero selection intents, including the subsequent reopening phase. All mouse
+movement and clicks were disabled and independently guarded throughout testing.
+
+The final direction checks mapped LEFT, RIGHT, UP and DOWN appropriately, but
+CENTER had a vertical offset. Valid retry inference ran at approximately 30 FPS
+with no tracking losses. An earlier attempt lost tracking near its end; those
+direction and closure checks were discarded, and camera reopening recovered
+60/60 valid probe frames before the retry. The cause of that loss was not isolated.
+
+Double-blink selection reliability, center calibration repeatability and tracking
+robustness remain unresolved. These are qualitative results from one session,
+not accuracy estimates or evidence of clinical validation. Personal profiles and
+signal measurements are not committed.
+
 ## Emotion detection
 
 Use a separate environment to avoid installing two OpenCV distributions:
