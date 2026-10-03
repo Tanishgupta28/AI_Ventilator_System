@@ -2,6 +2,12 @@
 
 Project Delta is an AI-powered healthcare platform designed to assist patients on mechanical ventilators. The system integrates real-time vitals monitoring, facial emotion detection, and an eye-tracking communication interface to support patients, families, and medical staff in critical care settings.
 
+The dedicated Python communication prototype now provides six large gaze targets
+and double-blink selection through local patient-request events. It operates
+without OS mouse clicks or medical-device control. See the
+[AI module guide](AI%20models/README.md#stage-4-patient-communication-interface)
+for the `communication` launch command, verification and current limitations.
+
 ---
 
 ## Key Features

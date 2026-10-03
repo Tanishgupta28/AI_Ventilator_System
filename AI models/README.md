@@ -1,9 +1,10 @@
-# AI demos
+# AI demos and communication prototype
 
 Use **64-bit Python 3.11 or 3.12** for gaze/nose tracking on a desktop with a webcam.
 The separate emotion environment still requires **Python 3.11** because
 TensorFlow 2.15.1 has no Python 3.12 distribution. These scripts open
-OpenCV windows; gaze and nose modes also move and click the system mouse.
+OpenCV windows; legacy gaze and nose modes also move and click the system mouse.
+The dedicated `communication` mode uses local request events and no OS mouse actions.
 They are experimental demos, not validated clinical measurements.
 
 ## Gaze and nose tracking
@@ -76,7 +77,7 @@ Camera -> mirrored OpenCV BGR frame -> RGB -> refined MediaPipe landmarks
 | `gaze/calibration.py` | Five-target samples, medians, validated profile, JSON persistence. |
 | `gaze/interaction.py` | Blink state machine, double-blink intent, eyebrow lock, gated actions. |
 | `gaze/app.py` | Camera/inference, calibration window, loss handling, diagnostics, cleanup. |
-| `buttons.py` | Original fixed button rectangles; no final communication UI yet. |
+| `buttons.py` | Original desktop-demo rectangles; communication owns a separate layout. |
 | `tests/test_gaze_logic.py` | Stage 2 calculations/gestures; two blink expectations explicitly updated. |
 | `tests/test_gaze_safety.py` | Calibration, stability, timing, debounce, loss reset, action gating. |
 
@@ -344,6 +345,106 @@ to dry runs through the CLI. Expiry compares timestamps against the first event'
 deadline, retaining an inclusive interval boundary. No images or landmark arrays
 are logged. Existing Stage 3.5 loss records combine invalid reads, absent faces and
 invalid geometry, so that transient's root cause remains unresolved.
+
+## Stage 4 patient communication interface
+
+This dedicated OpenCV screen is a hackathon/research assistive communication
+prototype. It displays local requests only. It does not control a ventilator,
+change treatment settings, make clinical decisions, or send caregiver/backend
+messages. No framework, GPU requirement, model training, or dependency was added.
+
+From the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe "AI models/run.py" communication --check
+.\.venv\Scripts\python.exe "AI models/run.py" communication --camera 0 --calibration calibration/user.calibration.json
+```
+
+The calibration profile is optional. Missing/invalid profiles visibly select the
+existing fixed-sensitivity fallback. To create one, use the existing
+`gaze --calibrate calibration/user.calibration.json` flow first. Personal files
+remain Git-ignored. Focus the communication window and press Q/Escape to exit.
+
+For a bounded run (the communication preview remains visible):
+
+```powershell
+.\.venv\Scripts\python.exe "AI models/run.py" communication --dry-run --max-frames 120 --camera 0 --calibration calibration/user.calibration.json
+```
+
+Communication mode is always independent of OS mouse actions, even without
+`--dry-run`. It does not import PyAutoGUI, read the desktop cursor, or use the
+legacy eyebrow snapping/lock. `gaze` retains the older desktop demo. The shared
+blink threshold remains **0.012**, pairing window **0.65 seconds**, smoothing
+**0.3 current + 0.7 previous**, and default dead-zone half-width **0.01**.
+`--intent-diagnostics` can report communication intent events interactively.
+
+```text
+Camera -> mirrored OpenCV frame -> RGB -> MediaPipe FaceMesh/iris landmarks
+       -> eye-relative gaze -> optional calibration / fallback -> smoothing
+       -> dead zone -> canvas mapping/clamping -> rectangle hit testing
+       -> focused communication option
+          + completed double-blink intent -> one PatientRequest event
+```
+
+The fullscreen view displays a 1280 x 720 canvas. Six large rectangles are laid
+out in two columns and three rows:
+
+| Left | Right |
+| --- | --- |
+| WATER | PAIN |
+| CALL CAREGIVER | ADJUST POSITION |
+| YES | NO |
+
+Each target is 598 x 156 canvas pixels, separated by 20-pixel gaps. Bounds are
+defined once and shared by drawing and hit testing. Rectangles include their
+left/top edges and exclude right/bottom edges. Header, footer, gaps and screen
+edges contain no target. The window scales the canvas; gaze coordinates refer
+to that same canvas rather than the OS desktop. Large targets, spacing and the
+existing filter/dead zone tolerate some drift without adding calibration offsets.
+Real center repeatability remains an unresolved limitation.
+
+A focused button has a bright border and colored fill; the gaze marker, tracking
+status and calibration status are visible. Looking alone never selects. Focus
+holds while eyes are closed because closed-eye iris positions are unreliable,
+then updates from the current open-eye gaze. A completed double blink selects
+the current valid target once. No-target/cooldown rejection consumes the pair,
+so it cannot activate a later target. The existing 0.3-second cooldown applies.
+
+Each successful selection prints one local JSON event, for example:
+
+```json
+{"type": "patient_request", "id": "water", "label": "Water", "timestamp": 1234567890.0}
+```
+
+The timestamp is Unix time in seconds; monotonic time handles pairing, cooldown
+and feedback expiry. `Selected: Water` remains visible for three seconds. No
+database, network request, audio, or clinical action follows the event.
+
+Tracking loss clears focus and pending blink state, suppresses selections and
+resets the transient smoother. Calibration and brief selection feedback survive.
+Valid landmarks automatically resume tracking, with a fresh pair required for
+selection. Three consecutive invalid camera reads stop safely. Camera/model/window
+cleanup uses `ExitStack`, including exceptional exits.
+
+| Module | Responsibility |
+| --- | --- |
+| `gaze/communication.py` | Pure layout, hit testing, focus, selection/debounce and immutable request structure. |
+| `gaze/communication_app.py` | Camera/inference integration, OpenCV rendering, local JSON output and cleanup. |
+| `run.py` | Single CLI entry point, communication mode and dependency checks without PyAutoGUI. |
+| `tests/test_communication.py` | Hardware-free layout/interaction regressions. |
+
+Dedicated application targets provide larger, predictable interaction areas,
+deterministic tests and direct events with reduced accidental desktop interaction.
+This does not establish clinical validity or reliable targeting for every user.
+
+Stage 4 verification: **69 tests passed** (47 existing, 22 new). Syntax, CLI/help,
+invalid-option checks, gaze/communication imports and visual rendering passed.
+A real CPU webcam run processed **120/120 valid landmark and gaze frames** at
+approximately **25.8 FPS**, with zero blink events, selections or OS mouse actions.
+PyAutoGUI imports were independently blocked, camera release was checked and
+MediaPipe closed exactly once. Deliberate WATER/YES/NO selection, no-target blinks
+and physical tracking-loss/recovery checks still require human participation;
+the automated run is not evidence that those intended selections succeeded.
 
 ## Emotion detection
 
