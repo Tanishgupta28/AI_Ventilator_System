@@ -26,7 +26,15 @@ def main():
     parser.add_argument("--blink-threshold", type=float, default=0.012, help="Normalized eyelid gap classified as closed (default 0.012); validate manually")
     parser.add_argument("--double-blink-window", type=float, default=DEFAULT_SETTINGS.double_blink_seconds, help="Maximum completed-blink interval in seconds (default 0.65)")
     parser.add_argument("--intent-diagnostics", action="store_true", help="Print blink/selection events in gaze dry-run or communication mode")
+    parser.add_argument("--target-stability", type=float, default=DEFAULT_SETTINGS.target_stability_seconds,
+                        help="Communication candidate dwell in seconds (default 0.25)")
+    parser.add_argument("--target-clear", type=float, default=DEFAULT_SETTINGS.target_clear_seconds,
+                        help="Communication no-target dwell before clearing focus (default 0.25)")
     args = parser.parse_args()
+    if any(not math.isfinite(v) or v < 0 for v in (args.target_stability, args.target_clear)):
+        parser.error("Target timing must be finite and nonnegative")
+    if args.mode != "communication" and (args.target_stability != DEFAULT_SETTINGS.target_stability_seconds or args.target_clear != DEFAULT_SETTINGS.target_clear_seconds):
+        parser.error("Target timing options require communication mode")
     supported = ((3, 11),) if args.mode == "emotion" else ((3, 11), (3, 12))
     if sys.version_info[:2] not in supported:
         parser.error("Use Python 3.11 for emotion; Python 3.11 or 3.12 for gaze/nose.")
@@ -86,7 +94,8 @@ def main():
         raise SystemExit(run(camera_index=args.camera, dry_run=args.dry_run, max_frames=args.max_frames,
                              calibration_path=args.calibration, dead_zone=args.dead_zone,
                              blink_threshold=args.blink_threshold, double_blink_window=args.double_blink_window,
-                             intent_diagnostics=args.intent_diagnostics))
+                             intent_diagnostics=args.intent_diagnostics, target_stability=args.target_stability,
+                             target_clear=args.target_clear))
     filename = {"gaze": "main3.py", "nose": "mainn.py", "emotion": "emotionfear1.py"}[args.mode]
     runpy.run_path(str(Path(__file__).resolve().parent / filename), run_name="__main__")
 

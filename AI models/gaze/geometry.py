@@ -10,23 +10,26 @@ from .config import (
 
 @dataclass(frozen=True)
 class EyeGeometry:
-    iris: tuple[int, int]
-    bounds: tuple[int, int, int, int]
+    iris: tuple[float, float]
+    bounds: tuple[float, float, float, float]
     eyebrow_gap: float
     left_lid_gap: float
     right_lid_gap: float
 
 
 def extract_eye_geometry(landmarks, frame_width, frame_height):
-    """Read normalized landmarks; retain the original pixel rounding/offsets."""
+    """Keep subpixel geometry for mathematics; round only at drawing boundaries.
+
+    Original landmark indices and +/-1 pixel bounds offsets are retained.
+    """
     right_iris = [landmarks[i] for i in RIGHT_IRIS]
     left_iris = [landmarks[i] for i in LEFT_IRIS]
-    iris_x = int((sum(p.x for p in right_iris) + sum(p.x for p in left_iris)) / 8 * frame_width)
-    iris_y = int((sum(p.y for p in right_iris) + sum(p.y for p in left_iris)) / 8 * frame_height)
-    x_min = int(landmarks[EYE_X_BOUNDS[0]].x * frame_width)
-    x_max = int(landmarks[EYE_X_BOUNDS[1]].x * frame_width)
-    y_min = int(sum(landmarks[i].y for i in EYE_TOP) / 2 * frame_height) + 1
-    y_max = int(sum(landmarks[i].y for i in EYE_BOTTOM) / 2 * frame_height) - 1
+    iris_x = (sum(p.x for p in right_iris) + sum(p.x for p in left_iris)) / 8 * frame_width
+    iris_y = (sum(p.y for p in right_iris) + sum(p.y for p in left_iris)) / 8 * frame_height
+    x_min = landmarks[EYE_X_BOUNDS[0]].x * frame_width
+    x_max = landmarks[EYE_X_BOUNDS[1]].x * frame_width
+    y_min = sum(landmarks[i].y for i in EYE_TOP) / 2 * frame_height + 1
+    y_max = sum(landmarks[i].y for i in EYE_BOTTOM) / 2 * frame_height - 1
     left_brow_y = landmarks[LEFT_BROW].y * frame_height
     left_eye_y = landmarks[LEFT_EYELID[1]].y * frame_height
     right_brow_y = landmarks[RIGHT_BROW].y * frame_height

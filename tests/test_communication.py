@@ -69,7 +69,7 @@ class LayoutTests(unittest.TestCase):
 class CommunicationTests(unittest.TestCase):
     def setUp(self):
         self.buttons = make_layout(*CANVAS_SIZE)
-        self.controller = CommunicationController(self.buttons)
+        self.controller = CommunicationController(self.buttons, replace(DEFAULT_SETTINGS, target_stability_seconds=0, target_clear_seconds=0))
         self.water = center(self.buttons[0])
         self.yes = center(self.buttons[4])
         self.no_target = (0, 0)
@@ -82,6 +82,7 @@ class CommunicationTests(unittest.TestCase):
         return event
 
     def blink(self, point, start):
+        self.update(point, False, start - .01)
         self.update(point, True, start)
         self.update(point, False, start + .1)
         return self.update(point, False, start + .17)
@@ -133,19 +134,19 @@ class CommunicationTests(unittest.TestCase):
             self.assertIsNone(self.update(self.water, False, 2 + i / 30))
         self.assertEqual(len(self.events), 1)
 
-    def test_selection_uses_current_target_not_first_blink_target(self):
+    def test_selection_uses_locked_target_not_pair_completion_target(self):
         self.update(self.water, False, 0)
         self.blink(self.water, 1)
         self.update(self.yes, False, 1.2)
         self.blink(self.yes, 1.3)
-        self.assertEqual(self.events[0].id, 'yes')
+        self.assertEqual(self.events[0].id, 'water')
 
-    def test_leaving_target_before_second_blink_prevents_selection(self):
+    def test_leaving_target_during_pair_retains_locked_selection(self):
         self.update(self.water, False, 0)
         self.blink(self.water, 1)
         self.update(self.no_target, False, 1.2)
         self.blink(self.no_target, 1.3)
-        self.assertEqual(self.events, [])
+        self.assertEqual(self.events[0].id, "water")
 
     def test_closure_holds_focus_but_never_selects(self):
         self.update(self.water, False, 0)
@@ -175,7 +176,7 @@ class CommunicationTests(unittest.TestCase):
         self.assertEqual(self.events[0].id, 'yes')
 
     def test_cooldown_rejects_and_consumes_a_second_pair(self):
-        settings = replace(DEFAULT_SETTINGS, click_debounce_seconds=1.0)
+        settings = replace(DEFAULT_SETTINGS, click_debounce_seconds=1.0, target_stability_seconds=0, target_clear_seconds=0)
         diagnostics = []
         self.controller = CommunicationController(self.buttons, settings, diagnostics.append)
         self.update(self.water, False, 0)

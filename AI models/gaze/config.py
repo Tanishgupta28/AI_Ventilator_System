@@ -31,6 +31,8 @@ class GazeSettings:
     click_debounce_seconds: float = 0.3
     snap_hold_seconds: float = 5
     dead_zone: float = 0.01
+    target_stability_seconds: float = 0.25
+    target_clear_seconds: float = 0.25
     max_invalid_camera_frames: int = 3
 
 

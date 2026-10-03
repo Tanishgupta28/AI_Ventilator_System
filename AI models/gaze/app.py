@@ -143,8 +143,10 @@ def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
                     interaction.process(geometry, cursor, now)
                     iris_x, iris_y = geometry.iris
                     x_min, y_min, x_max, y_max = geometry.bounds
-                    cv2.circle(frame, (iris_x, iris_y), 2, (0, 255, 0))
-                    cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 255), 2)
+                    # Rasterization must not feed rounded coordinates back into gaze math.
+                    cv2.circle(frame, (round(iris_x), round(iris_y)), 2, (0, 255, 0))
+                    cv2.rectangle(frame, (round(x_min), round(y_min)),
+                                  (round(x_max), round(y_max)), (0, 255, 255), 2)
             if failed:
                 break
             if session:

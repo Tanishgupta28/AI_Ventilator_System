@@ -382,8 +382,9 @@ blink threshold remains **0.012**, pairing window **0.65 seconds**, smoothing
 Camera -> mirrored OpenCV frame -> RGB -> MediaPipe FaceMesh/iris landmarks
        -> eye-relative gaze -> optional calibration / fallback -> smoothing
        -> dead zone -> canvas mapping/clamping -> rectangle hit testing
-       -> focused communication option
-          + completed double-blink intent -> one PatientRequest event
+       -> candidate target -> monotonic target-stability filter
+       -> stable focused option -> first closure locks eligible target
+       -> second completed blink confirms locked target -> one PatientRequest
 ```
 
 The fullscreen view displays a 1280 x 720 canvas. Six large rectangles are laid
@@ -404,11 +405,18 @@ existing filter/dead zone tolerate some drift without adding calibration offsets
 Real center repeatability remains an unresolved limitation.
 
 A focused button has a bright border and colored fill; the gaze marker, tracking
-status and calibration status are visible. Looking alone never selects. Focus
-holds while eyes are closed because closed-eye iris positions are unreliable,
-then updates from the current open-eye gaze. A completed double blink selects
-the current valid target once. No-target/cooldown rejection consumes the pair,
-so it cannot activate a later target. The existing 0.3-second cooldown applies.
+status and calibration status are visible. Looking alone never selects. A candidate
+must remain consistent for 250 ms before becoming stable focus; a persistent gap
+clears focus after 250 ms. These durations use monotonic time and are configurable
+with `--target-stability` and `--target-clear`. Brief departures retain the highlight,
+but a stale candidate cannot qualify for selection.
+
+The first closure locks an eligible stable target. Two completed blinks within
+0.65 seconds confirm that same target, even if gaze shifts while blinking.
+Closed/reopening frames do not qualify new focus or update the communication gaze
+smoother. Invalid closure, timeout, tracking loss, and consuming a pair clear the
+lock. No-target/cooldown rejection consumes the pair so it cannot activate a later
+target. The existing 0.3-second cooldown applies.
 
 Each successful selection prints one local JSON event, for example:
 
@@ -445,6 +453,28 @@ PyAutoGUI imports were independently blocked, camera release was checked and
 MediaPipe closed exactly once. Deliberate WATER/YES/NO selection, no-target blinks
 and physical tracking-loss/recovery checks still require human participation;
 the automated run is not evidence that those intended selections succeeded.
+
+## Stage 4.6 / 4.7 engineering checkpoint
+
+Computational iris centers and eye bounds now retain floating-point pixel
+coordinates through normalization, calibration and smoothing. Integer conversion
+occurs only for OpenCV drawing. Landmark indices, bounds offsets, calibration
+equations, blink threshold and pairing window remain unchanged. Tests explicitly
+show subpixel motion that previously collapsed to identical integer-derived gaze.
+Optional local frame diagnostics compare raw, calibrated, smoothed and mapped
+gaze with candidate, stable and locked targets; personal profiles/logs are ignored
+by Git.
+
+**94 deterministic tests pass, but human communication usability remains unresolved.**
+Float geometry and fresh calibration improved vertical row ordering and some
+intended stable-focus occupancy. WATER reached 68.5%, PAIN 54.8%, CALL CAREGIVER
+39.4%, and ADJUST POSITION 43.8%; YES and NO remained 0%. Downward calibration
+separation was small relative to within-target variation, and residual drift and
+wrong-row focus persisted. Selection trials were stopped after gaze-only checks;
+these results do not establish successful human selection or clinical validity.
+Both 250 ms timing defaults remain provisional. Real mouse actions and networking
+were disabled during validation. This checkpoint preserves verified engineering
+improvements rather than claiming that the interface is usable.
 
 ## Emotion detection
 

@@ -12,7 +12,7 @@ import numpy as np
 from .calibration import load_profile
 from .communication import CANVAS_SIZE, CommunicationController, make_layout
 from .config import DEFAULT_SETTINGS
-from .geometry import GazeEstimator, apply_dead_zone, extract_valid_eye_geometry, map_to_screen
+from .geometry import GazeEstimator, apply_dead_zone, extract_valid_eye_geometry, map_to_screen, normalize_gaze, normalize_and_scale
 
 WINDOW = 'Patient Communication - Research Prototype'
 
@@ -53,6 +53,8 @@ def render_screen(controller, calibration_status, point, now, size=CANVAS_SIZE):
     if point is not None and controller.tracking_valid:
         cv2.circle(canvas, tuple(round(v) for v in point), 9, (100, 245, 245), 2)
     feedback = controller.feedback(now)
+    if controller.locked_target is not None:
+        feedback = 'Confirming: ' + controller.locked_target.label
     focus = controller.focused.label if controller.focused is not None else 'None'
     cv2.putText(canvas, feedback or f'Target: {focus}', (32, height - 56),
                 cv2.FONT_HERSHEY_SIMPLEX, .8, (150, 245, 190), 2)
@@ -63,7 +65,9 @@ def render_screen(controller, calibration_status, point, now, size=CANVAS_SIZE):
 
 def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
         dead_zone=DEFAULT_SETTINGS.dead_zone, blink_threshold=DEFAULT_SETTINGS.blink_threshold,
-        double_blink_window=DEFAULT_SETTINGS.double_blink_seconds, intent_diagnostics=False):
+        double_blink_window=DEFAULT_SETTINGS.double_blink_seconds, intent_diagnostics=False,
+        frame_diagnostics=None, target_stability=DEFAULT_SETTINGS.target_stability_seconds,
+        target_clear=DEFAULT_SETTINGS.target_clear_seconds):
     if type(camera_index) is not int or camera_index < 0:
         raise ValueError('Camera index must be a nonnegative integer')
     if dry_run and (type(max_frames) is not int or max_frames < 1):
@@ -74,7 +78,8 @@ def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
         raise ValueError('Double-blink window must be finite and positive')
     apply_dead_zone((.5, .5), dead_zone)
     settings = replace(DEFAULT_SETTINGS, dead_zone=dead_zone, blink_threshold=blink_threshold,
-                       double_blink_seconds=double_blink_window)
+                       double_blink_seconds=double_blink_window, target_stability_seconds=target_stability,
+                       target_clear_seconds=target_clear)
     profile = load_profile(calibration_path) if calibration_path else None
     calibration_status = ('Calibration: loaded' if profile else
                           'Calibration: invalid / fallback' if calibration_path else
@@ -128,13 +133,25 @@ def run(camera_index=0, dry_run=False, max_frames=60, calibration_path=None,
                 metrics.landmark_frames += 1
                 closed = (geometry.left_lid_gap < settings.blink_threshold
                           and geometry.right_lid_gap < settings.blink_threshold)
-                relative = estimator.previous_relative if closed else estimator.estimate(geometry)
-                metrics.gaze_calculations += int(not closed)
+                gaze_open = not closed and controller.blinks.state in ("UNKNOWN", "OPEN")
+                relative = estimator.estimate(geometry) if gaze_open else estimator.previous_relative
+                metrics.gaze_calculations += int(gaze_open)
                 point = map_to_screen(apply_dead_zone(relative, settings.dead_zone),
                                       CANVAS_SIZE, settings.screen_margin)
                 request = controller.update(point, closed, now)
                 if request is not None:
                     print(json.dumps(request.to_dict()), flush=True)
+            if frame_diagnostics is not None:
+                raw = normalize_gaze(geometry) if geometry is not None else None
+                calibrated = ((profile.map(raw) if profile else normalize_and_scale(geometry, settings))
+                              if geometry is not None else None)
+                frame_diagnostics(dict(at=now, tracking_valid=controller.tracking_valid,
+                    raw=raw, calibrated=calibrated, smoothed=estimator.previous_relative,
+                    point=point, eye_bounds=geometry.bounds if geometry is not None else None,
+                    candidate=controller.candidate.id if controller.candidate else None,
+                    stable=controller.focused.id if controller.focused else None,
+                    locked=controller.locked_target.id if controller.locked_target else None,
+                    blink_state=controller.blinks.state))
             cv2.imshow(WINDOW, render_screen(controller, calibration_status, point, now))
             key = cv2.waitKey(5)
             if failed or key in (ord('q'), 27) or cv2.getWindowProperty(WINDOW, cv2.WND_PROP_VISIBLE) < 1:
