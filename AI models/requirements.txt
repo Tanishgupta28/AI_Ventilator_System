@@ -1,5 +1,6 @@
-# Python 3.11; keep one OpenCV distribution (MediaPipe uses contrib).
+# Python 3.11/3.12; keep one OpenCV distribution (MediaPipe uses contrib).
 numpy==1.26.4
 opencv-contrib-python==4.11.0.86
 mediapipe==0.10.21
 PyAutoGUI==0.9.54
+requests==2.32.3

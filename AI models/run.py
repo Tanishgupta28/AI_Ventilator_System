@@ -13,9 +13,14 @@ def main():
     parser.add_argument("--camera", type=int, default=0)
     parser.add_argument("--backend-url", default="", help="Optional emotion POST endpoint")
     parser.add_argument("--check", action="store_true", help="Check imports without opening a camera")
+    parser.add_argument("--dry-run", action="store_true", help="Gaze verification: disable mouse actions and preview")
+    parser.add_argument("--max-frames", type=int, default=60, help="Frame limit for gaze dry run")
     args = parser.parse_args()
-    if sys.version_info[:2] != (3, 11):
-        parser.error("Use Python 3.11 and the documented virtual environment.")
+    supported = ((3, 11),) if args.mode == "emotion" else ((3, 11), (3, 12))
+    if sys.version_info[:2] not in supported:
+        parser.error("Use Python 3.11 for emotion; Python 3.11 or 3.12 for gaze/nose.")
+    if args.dry_run and (args.mode != "gaze" or args.max_frames < 1):
+        parser.error("--dry-run requires gaze mode and a positive --max-frames")
     if args.camera < 0:
         parser.error("--camera must be nonnegative")
     if args.backend_url and args.mode != "emotion":
@@ -24,8 +29,10 @@ def main():
         parser.error("--backend-url must start with http:// or https://")
     os.environ["AI_CAMERA_INDEX"] = str(args.camera)
     os.environ["AI_BACKEND_URL"] = args.backend_url
+    os.environ["AI_DRY_RUN"] = "1" if args.dry_run else "0"
+    os.environ["AI_MAX_FRAMES"] = str(args.max_frames)
     if args.check:
-        modules = ("cv2", "deepface", "requests") if args.mode == "emotion" else ("cv2", "mediapipe", "pyautogui")
+        modules = ("cv2", "numpy", "deepface", "requests") if args.mode == "emotion" else ("cv2", "numpy", "mediapipe", "pyautogui", "requests")
         try:
             imported = {name: importlib.import_module(name) for name in modules}
             if args.mode != "emotion":
