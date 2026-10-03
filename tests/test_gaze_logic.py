@@ -10,7 +10,7 @@ from gaze.geometry import (
     EyeGeometry, GazeEstimator, blend_cursor, extract_eye_geometry,
     map_to_screen, nearest_button, normalize_and_scale, scale_from_center, smooth_point,
 )
-from gaze.interaction import GestureState
+from gaze.interaction import BlinkDetector, DoubleBlinkIntent, GestureState
 
 
 class GazeGeometryTests(unittest.TestCase):
@@ -89,19 +89,19 @@ class GestureStateTests(unittest.TestCase):
         self.assertEqual(state.update_eyebrow(19), "snap")
         self.assertIsNone(state.update_eyebrow(19))
 
-    def test_consecutive_closed_frames_keep_existing_click_behavior(self):
-        state = GestureState()
-        self.assertFalse(state.update_blink(10))
-        self.assertTrue(state.update_blink(10.1))
-        self.assertEqual(state.blink_count, 0)
-        self.assertFalse(state.update_blink(10.2))
-        self.assertTrue(state.update_blink(10.3))
+    def test_consecutive_closed_frames_no_longer_create_blinks(self):
+        state = BlinkDetector()
+        self.assertFalse(state.update(False, 10))
+        for now in (10.1, 10.2, 10.3, 10.4):
+            self.assertFalse(state.update(True, now))
+        self.assertFalse(state.update(False, 10.5))
+        self.assertTrue(state.update(False, 10.57))
 
     def test_half_second_blink_gap_resets_counter(self):
-        state = GestureState()
-        self.assertFalse(state.update_blink(10))
-        self.assertFalse(state.update_blink(10.5))
-        self.assertTrue(state.update_blink(10.6))
+        state = DoubleBlinkIntent()
+        self.assertFalse(state.update(True, 10))
+        self.assertFalse(state.update(True, 10.6))
+        self.assertTrue(state.update(True, 10.9))
 
     def test_snap_lock_expires_at_five_seconds(self):
         state = GestureState()

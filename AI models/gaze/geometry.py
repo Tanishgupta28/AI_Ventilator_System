@@ -44,11 +44,16 @@ def scale_from_center(value, negative_sensitivity, positive_sensitivity):
     return 0.5 + (value - 0.5) * positive_sensitivity
 
 
-def normalize_and_scale(geometry, settings=DEFAULT_SETTINGS):
+def normalize_gaze(geometry):
     iris_x, iris_y = geometry.iris
     x_min, y_min, x_max, y_max = geometry.bounds
     rel_x = (iris_x - x_min) / max(1, x_max - x_min)
     rel_y = (iris_y - y_min) / max(1, y_max - y_min)
+    return rel_x, rel_y
+
+
+def normalize_and_scale(geometry, settings=DEFAULT_SETTINGS):
+    rel_x, rel_y = normalize_gaze(geometry)
     return (
         scale_from_center(rel_x, settings.left_sensitivity, settings.right_sensitivity),
         scale_from_center(rel_y, settings.up_sensitivity, settings.down_sensitivity),
@@ -61,15 +66,55 @@ def smooth_point(current, previous, alpha):
 
 
 class GazeEstimator:
-    """Retain the relative gaze filter state across frames containing a face."""
-    def __init__(self, settings=DEFAULT_SETTINGS):
+    """Filter mapped open-eye gaze; reset transient state on tracking loss."""
+    def __init__(self, settings=DEFAULT_SETTINGS, profile=None):
         self.settings = settings
+        self.profile = profile
         self.previous_relative = (0.5, 0.5)
 
     def estimate(self, geometry):
-        relative = normalize_and_scale(geometry, self.settings)
+        relative = (self.profile.map(normalize_gaze(geometry)) if self.profile is not None
+                    else normalize_and_scale(geometry, self.settings))
         self.previous_relative = smooth_point(relative, self.previous_relative, self.settings.gaze_alpha)
         return self.previous_relative
+
+    def reset(self):
+        self.previous_relative = (0.5, 0.5)
+
+
+def valid_geometry(geometry):
+    x_min, y_min, x_max, y_max = geometry.bounds
+    values = (*geometry.iris, *geometry.bounds, geometry.eyebrow_gap,
+              geometry.left_lid_gap, geometry.right_lid_gap)
+    return (all(math.isfinite(value) for value in values) and x_max > x_min
+            and y_max > y_min and geometry.left_lid_gap >= 0 and geometry.right_lid_gap >= 0)
+
+
+def extract_valid_eye_geometry(landmarks, frame_width, frame_height):
+    """Treat missing, nonfinite, or collapsed eye geometry as unavailable tracking."""
+    try:
+        if len(landmarks) < 478 or frame_width <= 0 or frame_height <= 0:
+            return None
+        geometry = extract_eye_geometry(landmarks, frame_width, frame_height)
+        return geometry if valid_geometry(geometry) else None
+    except (AttributeError, IndexError, TypeError, ValueError, OverflowError):
+        return None
+
+
+def apply_dead_zone(relative, width=0.01):
+    """Flatten a central band, rescaling the remaining range continuously."""
+    if not math.isfinite(width) or not 0 <= width < 0.5:
+        raise ValueError("Dead zone must be finite and in [0, 0.5)")
+    if width == 0:
+        return tuple(relative)
+    result = []
+    for value in relative:
+        delta = value - 0.5
+        if abs(delta) <= width:
+            result.append(0.5)
+        else:
+            result.append(0.5 + math.copysign((abs(delta) - width) * 0.5 / (0.5 - width), delta))
+    return tuple(result)
 
 
 def map_to_screen(relative, screen_size, margin=10):
